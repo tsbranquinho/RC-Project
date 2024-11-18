@@ -169,9 +169,10 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
     player->is_playing = 1;
     player->current_game = malloc(sizeof(Game));
     player->current_game->trial_count = 0;
-    player->current_game->start_time = time(NULL);
     player->current_game->max_time = max_time;
     generate_random_key(player->current_game->secret_key);
+    player->current_game->trial = NULL;
+    player->current_game->start_time = time(NULL);
 
 
     send_udp_response("RSG OK\n", client_addr, client_addr_len, udp_socket);
@@ -206,26 +207,75 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     }
 
     Player *player = find_player(plid);
-    if (!player || !player->is_playing || trial_num != player->current_game->trial_count) {
+    player->current_game->trial_count++;
+    if (!player || !player->is_playing) {
         send_udp_response("RTR NOK\n", client_addr, client_addr_len, udp_socket);
         return;
     }
 
+    for (Trials *trial = player->current_game->trial; trial != NULL; trial = trial->prev) {
+        if (strcmp(trial->guess, guess) == 0) {
+            player->current_game->trial_count--;
+            send_udp_response("RTR DUP\n", client_addr, client_addr_len, udp_socket);
+            return;
+        }
+    }
 
     int black = 0, white = 0;
+    char response[BUFFER_SIZE];
+
+    if (player->current_game->trial_count == trial_num + 1) {
+        // pode ser Invalid, o jogo estar um à frente do suposto
+        Trials *aux = malloc(sizeof(Trials));
+        strcpy(aux->guess, guess);
+        if (player->current_game->trial != NULL) {
+            if (strcmp(player->current_game->trial->guess, guess) != 0) {
+                send_udp_response("RTR INV\n", client_addr, client_addr_len, udp_socket);
+            }
+            else {
+                player->current_game->trial_count--;
+                snprintf(response, sizeof(response), "RTR OK %d %d %d\n", trial_num, black, white);
+                send_udp_response(response, client_addr, client_addr_len, udp_socket);
+            }
+        }
+        else {
+            send_udp_response("RTR INV\n", client_addr, client_addr_len, udp_socket);
+        }
+        free(aux);
+        return;
+    }
+
+    if (player->current_game->trial_count > MAX_TRIALS) {
+        snprintf(response, sizeof(response), "RTR ENT -1 -1 -1 %s\n", player->current_game->secret_key); //TODO corrigir isto, é temporário o fix
+        send_udp_response(response, client_addr, client_addr_len, udp_socket);
+        player->current_game->trial_count--;
+        return;
+    }
+
+    if (time(NULL) - player->current_game->start_time > player->current_game->max_time) {
+        snprintf(response, sizeof(response), "RTR ETM -1 -1 -1 %s\n", player->current_game->secret_key); //TODO corrigir isto, é temporário o fix
+        send_udp_response(response, client_addr, client_addr_len, udp_socket);
+        player->current_game->trial_count--;
+        return;
+    }
+
     if (calculate_feedback(guess, player->current_game->secret_key, &black, &white) < 0) {
         send_udp_response("RTR ERR\n \0", client_addr, client_addr_len, udp_socket);
         return;
     }
 
-    char response[BUFFER_SIZE];
     if (black == MAX_COLORS) {
         snprintf(response, sizeof(response), "RTR OK %d 4 0\n", trial_num);
         player->is_playing = 0;
     } else {
         snprintf(response, sizeof(response), "RTR OK %d %d %d\n'", trial_num, black, white);
-        player->current_game->trial_count++;
     }
+    Trials *trial = malloc(sizeof(Trials));
+    strncpy(trial->guess, guess, MAX_COLORS);
+    trial->black = black;
+    trial->white = white;
+    trial->prev = player->current_game->trial;
+    player->current_game->trial = trial;
 
     send_udp_response(response, client_addr, client_addr_len, udp_socket);
 }
@@ -246,6 +296,9 @@ void handle_quit_request(const char *request, struct sockaddr_in *client_addr, s
 
     char response[BUFFER_SIZE];
     snprintf(response, sizeof(response), "RQT OK %s\n", player->current_game->secret_key);
+    for (Trials *trial = player->current_game->trial; trial != NULL; trial = trial->prev) {
+        free(trial);
+    }
     free(player->current_game);
     player->is_playing = 0;
     player->current_game = NULL;
@@ -299,8 +352,6 @@ void generate_random_key(char *key) {
 }
 
 int calculate_feedback(const char *guess, const char *secret, int *black, int *white) {
-    *black = 0;
-    *white = 0;
 
     printf("Guess: %s\n", guess);
     printf("Secret: %s\n", secret);

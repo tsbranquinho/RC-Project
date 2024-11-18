@@ -23,7 +23,7 @@ typedef enum {
     CMD_INVALID
 } Command;
 
-void main_arguments(int argc, char *argv[]);
+void get_arguments(int argc, char *argv[]);
 Command get_next_command(char *input);
 int is_valid_ip(const char *ip);
 void usage(const char *progname);

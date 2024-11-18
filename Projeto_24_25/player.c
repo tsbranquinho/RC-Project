@@ -19,10 +19,10 @@ char *GSIP = DEFAULT_IP;                 // Default IP
 int GSport = DEFAULT_PORT;               // Default port
 char plidCurr[ID_SIZE + 1];              // Current player ID
 int currPlayer = 0;                      // Flag to check if a player is playing or not
-int currTries = 1;                       // Number of tries of the current player (it starts with the "1st try")
+int currTries = 0;                       // Number of tries of the current player (it starts with the "1st try")
 //TODO eu presumo que apos um startgame este terminal só pode usar outro plid se fizer quit
 
-void main_arguments(int argc, char *argv[]){
+void get_arguments(int argc, char *argv[]){
     int opt, ip_set = 0, port_set = 0;
     while ((opt = getopt(argc, argv, "n:p:")) != -1) {
         switch (opt) {
@@ -95,7 +95,7 @@ int is_valid_ip(const char *ip) {
 
 int main(int argc, char *argv[]) {
 
-    main_arguments(argc, argv);
+    get_arguments(argc, argv);
 
     while (1) {
         printf("Enter command: \n");
@@ -300,7 +300,7 @@ void try_code(const char *code) {
     }
 
     char message[BUFFER_SIZE];
-    snprintf(message, sizeof(message), "TRY %s %s %d\n",plidCurr, trimmed_code, currTries);
+    snprintf(message, sizeof(message), "TRY %s %s %d\n",plidCurr, trimmed_code, currTries+1);
 
     char response[BUFFER_SIZE];
     printf("[DEBUG] Sending try request: %s", message);
@@ -318,15 +318,16 @@ void receive_try_msg(const char *response) {
     char status[BUFFER_SIZE];
     int black = 0, white = 0;
     char code[MAX_COLORS + 1] = {0};
+    int tries;
 
-    if (sscanf(response, "RTR %s %d %d %4s", status, &black, &white, code) < 3) {
+    if (sscanf(response, "RTR %s %d %d %d %4s", status, &tries, &black, &white, code) < 1) {
         fprintf(stderr, "Invalid response from server: %s\n", response);
         return;
     }
 
     if (strcmp(status, "OK") == 0) {
+        currTries = tries;
         printf("Tries: %d, Black: %d, White: %d\n", currTries, black, white);
-        currTries++;
 
         if (black == MAX_COLORS) {
             printf("Congratulations! You've cracked the secret code.\n");

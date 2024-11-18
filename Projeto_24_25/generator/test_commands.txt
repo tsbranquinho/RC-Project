@@ -1,10 +1,11 @@
 start 123456 300
-
 try BPPB
 try RGYR
 try YBBP
 try GYYG
-
-quit
-
-debug 123456 300 RGBY
+try YYYY
+try BBBB
+try RGBB
+try YYBB
+try YRRR
+exit
