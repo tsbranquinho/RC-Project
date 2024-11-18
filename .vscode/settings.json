@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.rmd": "markdown",
+        "stdio.h": "c",
+        "string.h": "c",
+        "cache.h": "c",
+        "stdlib.h": "c",
+        "inet.h": "c"
+    }
+}

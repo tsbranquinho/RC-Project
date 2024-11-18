@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -pthread -Wall
-TARGETS = user AS
+TARGETS = player GS
 COMMON_SRC = common.c
 
 all: $(TARGETS)
