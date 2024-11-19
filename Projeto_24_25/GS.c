@@ -213,13 +213,6 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         return;
     }
 
-    for (Trials *trial = player->current_game->trial; trial != NULL; trial = trial->prev) {
-        if (strcmp(trial->guess, guess) == 0) {
-            player->current_game->trial_count--;
-            send_udp_response("RTR DUP\n", client_addr, client_addr_len, udp_socket);
-            return;
-        }
-    }
 
     int black = 0, white = 0;
     char response[BUFFER_SIZE];
@@ -231,6 +224,7 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         if (player->current_game->trial != NULL) {
             if (strcmp(player->current_game->trial->guess, guess) != 0) {
                 send_udp_response("RTR INV\n", client_addr, client_addr_len, udp_socket);
+                player->current_game->trial_count--;
             }
             else {
                 player->current_game->trial_count--;
@@ -240,9 +234,18 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         }
         else {
             send_udp_response("RTR INV\n", client_addr, client_addr_len, udp_socket);
+            player->current_game->trial_count--;
         }
         free(aux);
         return;
+    }
+
+    for (Trials *trial = player->current_game->trial; trial != NULL; trial = trial->prev) {
+        if (strcmp(trial->guess, guess) == 0) {
+            player->current_game->trial_count--;
+            send_udp_response("RTR DUP\n", client_addr, client_addr_len, udp_socket);
+            return;
+        }
     }
 
     if (player->current_game->trial_count > MAX_TRIALS) {
@@ -345,21 +348,36 @@ void send_udp_response(const char *message, struct sockaddr_in *client_addr, soc
 
 void generate_random_key(char *key) {
     const char *colors = COLOR_OPTIONS;
+    srand(time(NULL));
     for (int i = 0; i < MAX_COLORS; i++) {
         key[i] = colors[rand() % strlen(colors)];
     }
     key[MAX_COLORS] = '\0';
 }
 
-int calculate_feedback(const char *guess, const char *secret, int *black, int *white) {
+int color_to_index(char color) {
+    switch(color) {
+        case 'R': return 0;
+        case 'G': return 1;
+        case 'B': return 2;
+        case 'Y': return 3;
+        case 'O': return 4;
+        case 'P': return 5;
+        default: return -1; // Invalid color
+    }
+}
 
+int calculate_feedback(const char *guess, const char *secret, int *black, int *white) {
     printf("Guess: %s\n", guess);
     printf("Secret: %s\n", secret);
 
-    int guess_count[256] = {0};
-    int secret_count[256] = {0};
+    int guess_count[MAX_COLORS] = {0};  // Array for counting occurrences of each color in the guess
+    int secret_count[MAX_COLORS] = {0}; // Array for counting occurrences of each color in the secret
 
-    // Primeiro, contar os "black" pegs
+    *black = 0;
+    *white = 0;
+
+    // Count "black" pegs and populate color counts for non-matching positions
     for (int i = 0; i < MAX_COLORS; i++) {
         if (strchr(COLOR_OPTIONS, guess[i]) == NULL || strchr(COLOR_OPTIONS, secret[i]) == NULL) {
             fprintf(stderr, "Error: Invalid character in guess or secret.\n");
@@ -369,13 +387,13 @@ int calculate_feedback(const char *guess, const char *secret, int *black, int *w
         if (guess[i] == secret[i]) {
             (*black)++;
         } else {
-            guess_count[(unsigned char)guess[i]]++;
-            secret_count[(unsigned char)secret[i]]++;
+            guess_count[color_to_index(guess[i])]++;
+            secret_count[color_to_index(secret[i])]++;
         }
     }
 
-    // Agora, contar os "white" pegs
-    for (int i = 0; i < 256; i++) {
+    // Count "white" pegs (min of guess and secret counts for each color)
+    for (int i = 0; i < MAX_COLORS; i++) {
         *white += (guess_count[i] < secret_count[i]) ? guess_count[i] : secret_count[i];
     }
 

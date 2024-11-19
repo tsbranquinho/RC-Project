@@ -4,7 +4,7 @@
 #include "common.h"
 
 #define MAX_PORT 65535              // Maximum port number
-#define BUFFER_SIZE 1024            // Buffer size for messages
+#define BUFFER_SIZE 64              // Buffer size for messages
 #define ID_SIZE 6                   // Size of player ID
 #define MAX_PLAYTIME 600            // Maximum playtime in seconds
 #define MAX_COLORS 4                // Maximum number of colors in the colour key
@@ -39,5 +39,6 @@ void receive_quit_msg(const char *response);
 void exit_game();
 void debug_game(const char *plid, unsigned int time, const char *code);
 void receive_debug_msg(const char *response);
+void end_game();
 
 #endif

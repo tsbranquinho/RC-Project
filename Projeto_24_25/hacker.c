@@ -18,7 +18,7 @@
 char *GSIP = DEFAULT_IP;                 // Default IP
 int GSport = DEFAULT_PORT;               // Default port
 char plidCurr[ID_SIZE + 1];              // Current player ID
-int currPlayer = 0;                      // Flag to check if a player is playing or not
+int currPlayer = 1;                      // Flag to check if a player is playing or not
 int currTries = 0;                       // Number of tries of the current player (it starts with the "1st try")
 //TODO eu presumo que apos um startgame este terminal só pode usar outro plid se fizer quit
 
@@ -96,6 +96,8 @@ int is_valid_ip(const char *ip) {
 int main(int argc, char *argv[]) {
 
     get_arguments(argc, argv);
+    strcpy(plidCurr, "106635\0");
+
 
     while (1) {
         printf("Enter command: \n");
