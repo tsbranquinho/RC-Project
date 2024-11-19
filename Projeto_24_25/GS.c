@@ -165,6 +165,7 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
         player = create_player(plid);
         insert_player(player);
     }
+    player->current_game->start_time = time(NULL);
 
     player->is_playing = 1;
     player->current_game = malloc(sizeof(Game));
@@ -172,7 +173,6 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
     player->current_game->max_time = max_time;
     generate_random_key(player->current_game->secret_key);
     player->current_game->trial = NULL;
-    player->current_game->start_time = time(NULL);
 
 
     send_udp_response("RSG OK\n", client_addr, client_addr_len, udp_socket);
