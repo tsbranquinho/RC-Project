@@ -38,7 +38,7 @@ void quit_game();
 void receive_quit_msg(const char *response);
 void exit_game();
 void debug_game(const char *plid, unsigned int time, const char *code);
-void receive_debug_msg(const char *response);
+void receive_debug_msg(const char *plid, const char *response);
 void end_game();
 
 #endif

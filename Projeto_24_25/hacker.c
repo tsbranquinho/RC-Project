@@ -390,10 +390,10 @@ void debug_game(const char *plid, unsigned int time, const char *code) {
     }
 
     printf("[DEBUG] Received response: %s", response);
-    receive_debug_msg(response);
+    receive_debug_msg(plid, response);
 }
 
-void receive_debug_msg(const char *response) {
+void receive_debug_msg(const char *plid, const char *response) {
     char status[BUFFER_SIZE];
 
     if (sscanf(response, "RDB %s", status) != 1) {

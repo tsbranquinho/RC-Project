@@ -44,5 +44,6 @@ void generate_random_key(char *key);
 int calculate_feedback(const char *guess, const char *secret, int *black, int *white);
 unsigned int hash(const char *plid);
 void insert_player(Player *player);
+void convert_code(char *temp, char *secret);
 
 #endif

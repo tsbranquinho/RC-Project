@@ -5,12 +5,11 @@
 #include <errno.h>
 #include <arpa/inet.h>  // For socket functions
 #include <sys/socket.h>  // For socket functions
+#include <sys/types.h>  // For data types
 #include <netinet/in.h>  // For sockaddr_in
 #include <time.h>  // For time functions
 #include "GS.h"
 #include "common.h"
-
-
 
 
 Player *hash_table[MAX_PLAYERS] = {NULL};
@@ -53,6 +52,8 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Starting Game Server on port: %d\n", GSport);
+    //copilot I need to know where the server is running
+    
 
     //TODO isto tbm tem de ser feito
     if (verbose_mode) {
@@ -77,6 +78,7 @@ int main(int argc, char *argv[]) {
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(GSport);
+
 
     // Bind UDP socket
     if (bind(udp_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
@@ -149,12 +151,13 @@ int main(int argc, char *argv[]) {
 void handle_start_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
     char plid[ID_SIZE + 1];
     int max_time;
+    printf("Got a start request\n");
 
     if (sscanf(request, "SNG %6s %3d", plid, &max_time) != 2 || max_time <= 0 || max_time > MAX_PLAYTIME) {
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
         return;
     }
-
+    
     Player *player = find_player(plid);
     if (player != NULL && player->is_playing) {
         send_udp_response("RSG NOK\n", client_addr, client_addr_len, udp_socket);
@@ -165,10 +168,10 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
         player = create_player(plid);
         insert_player(player);
     }
-    player->current_game->start_time = time(NULL);
 
     player->is_playing = 1;
     player->current_game = malloc(sizeof(Game));
+    player->current_game->start_time = time(NULL);
     player->current_game->trial_count = 0;
     player->current_game->max_time = max_time;
     generate_random_key(player->current_game->secret_key);
@@ -193,18 +196,36 @@ key is revealed, sending the corresponding colour code: C1 C2 C3 C4;
 
 void handle_try_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
     char plid[ID_SIZE + 1];
-    char guess[MAX_COLORS + 1];
+    char aux_guess[2*MAX_COLORS];
     int trial_num;
 
-    if (sscanf(request, "TRY %6s %4s %d", plid, guess, &trial_num) != 3) {
+    if (sscanf(request, "TRY %6s %[^0-9] %d", plid, aux_guess, &trial_num) != 3) {
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         return;
     }
 
-    if (strlen(guess) != MAX_COLORS) {
+    aux_guess[2*MAX_COLORS-1] = '\0';
+
+    if (strlen(aux_guess) != 2*MAX_COLORS-1) {
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         return;
     }
+    for (int i = 0; i < 2*MAX_COLORS; i += 2) {
+        if (strchr(COLOR_OPTIONS, aux_guess[i]) == NULL) {
+            send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
+            return;
+        }
+        if (aux_guess[i+1] != ' ' && aux_guess[i+1] != '\0') {
+            send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
+            return;
+        }
+    }
+
+    char guess[MAX_COLORS + 1];
+    for (int i = 0; i < MAX_COLORS; i++) {
+        guess[i] = aux_guess[2*i];
+    }
+    guess[MAX_COLORS] = '\0';
 
     Player *player = find_player(plid);
     player->current_game->trial_count++;
@@ -249,14 +270,20 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     }
 
     if (player->current_game->trial_count > MAX_TRIALS) {
-        snprintf(response, sizeof(response), "RTR ENT -1 -1 -1 %s\n", player->current_game->secret_key); //TODO corrigir isto, é temporário o fix
+        char temp[MAX_COLORS + 1];
+        convert_code(temp, player->current_game->secret_key);
+        printf("[DEBUG] temp: %s\n", temp);
+        snprintf(response, sizeof(response), "RTR ENT -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
         player->current_game->trial_count--;
         return;
     }
 
     if (time(NULL) - player->current_game->start_time > player->current_game->max_time) {
-        snprintf(response, sizeof(response), "RTR ETM -1 -1 -1 %s\n", player->current_game->secret_key); //TODO corrigir isto, é temporário o fix
+        char temp[MAX_COLORS + 1];
+        convert_code(temp, player->current_game->secret_key);
+        printf("[DEBUG] temp: %s\n", temp);
+        snprintf(response, sizeof(response), "RTR ETM -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
         player->current_game->trial_count--;
         return;
@@ -271,7 +298,7 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         snprintf(response, sizeof(response), "RTR OK %d 4 0\n", trial_num);
         player->is_playing = 0;
     } else {
-        snprintf(response, sizeof(response), "RTR OK %d %d %d\n'", trial_num, black, white);
+        snprintf(response, sizeof(response), "RTR OK %d %d %d\n", trial_num, black, white);
     }
     Trials *trial = malloc(sizeof(Trials));
     strncpy(trial->guess, guess, MAX_COLORS);
@@ -332,9 +359,10 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
 
     player->is_playing = 1;
     player->current_game = malloc(sizeof(Game));
-    player->current_game->trial_count = 0;
     player->current_game->start_time = time(NULL);
+    player->current_game->trial_count = 0;
     player->current_game->max_time = max_time;
+    player->current_game->trial = NULL;
     strncpy(player->current_game->secret_key, key, MAX_COLORS);
 
     send_udp_response("RDB OK\n", client_addr, client_addr_len, udp_socket);
@@ -457,4 +485,12 @@ void insert_player(Player *player) {
     unsigned int index = hash(player->plid);
     player->next = hash_table[index];
     hash_table[index] = player;
+}
+
+void convert_code(char *temp, char *secret) {
+    for (int i = 0; i < MAX_COLORS; i++) {
+        temp[2*i] = secret[i];
+        temp[2*i+1] = ' ';
+    }
+    temp[2*MAX_COLORS-1] = '\0';
 }

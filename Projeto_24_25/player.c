@@ -100,6 +100,7 @@ int main(int argc, char *argv[]) {
     while (1) {
         printf("Enter command: \n");
         char input[MAX_COMMAND_SIZE];
+        memset(input, 0, sizeof(input));
         
         if (fgets(input, sizeof(input), stdin) == NULL) {
             fprintf(stderr, "Error reading command.\n");
@@ -113,6 +114,7 @@ int main(int argc, char *argv[]) {
         switch (cmd) {
             case CMD_START: {
                 char plid[MAX_COMMAND_SIZE];
+                memset(plid, 0, sizeof(plid));
                 int time;
                 if (sscanf(input, "start %s %d", plid, &time) != 2 ) {
                     fprintf(stderr, "Invalid command.\n");
@@ -128,8 +130,9 @@ int main(int argc, char *argv[]) {
             }
 
             case CMD_TRY: {
-                char code[MAX_COMMAND_SIZE];
-                if (sscanf(input, "try %s", code) != 1) {
+                char code[8];
+                memset(code, 0, sizeof(code));
+                if (sscanf(input, "try %[^\n]", code) != 1) {
                     fprintf(stderr, "Invalid 'try' command format. Format: try C1 C2 C3 C4\n");
                     break;
                 }
@@ -169,9 +172,11 @@ int main(int argc, char *argv[]) {
 
             case CMD_DEBUG: {
 
-                char plid[MAX_COMMAND_SIZE];
+                char plid[7];
                 unsigned int max_playtime;
                 char code[MAX_COMMAND_SIZE];
+                memset(plid, 0, sizeof(plid));
+                memset(code, 0, sizeof(code));
 
                 if (sscanf(input, "debug %s %u %s", plid, &max_playtime, code) != 3) {
                     fprintf(stderr, "Invalid 'debug' command format.\n");
@@ -248,9 +253,11 @@ void start_game(const char *plid, unsigned int time) {
     }
 
     char message[BUFFER_SIZE];
+    memset(message, 0, sizeof(message));
     snprintf(message, sizeof(message), "SNG %s %03d\n", plid, time);
 
     char response[BUFFER_SIZE];
+    memset(response, 0, sizeof(response));
     printf("[DEBUG] Sending start game request: %s", message); // Debug log
 
     if (send_udp_skt(message, response, sizeof(response), GSIP, GSport) < 0) {
@@ -264,6 +271,7 @@ void start_game(const char *plid, unsigned int time) {
 
 void receive_start_msg(const char *response, const char *plid) {
     char status[BUFFER_SIZE];
+    memset(status, 0, sizeof(status));
     if (sscanf(response, "RSG %s", status) != 1) {
         fprintf(stderr, "Invalid response from server: %s\n", response);
         return;
@@ -284,26 +292,36 @@ void receive_start_msg(const char *response, const char *plid) {
 }
 
 void try_code(const char *code) {
-    char trimmed_code[MAX_COLORS + 1];
-    snprintf(trimmed_code, sizeof(trimmed_code), "%.*s", MAX_COLORS, code); // Ensure exact length
+    char trimmed_code[2*MAX_COLORS];
+    printf("Code: %s\n", code);
+    memset(trimmed_code, 0, sizeof(trimmed_code));
+    snprintf(trimmed_code, sizeof(trimmed_code), "%s", code);
+    trimmed_code[2*MAX_COLORS-1] = '\0';
     if (currPlayer == 0) {
         printf("No game started. Please start a game before trying a code.\n");
         return;
     }
 
-    if (strlen(trimmed_code) != MAX_COLORS) {
-        fprintf(stderr, "Invalid code length. It must be exactly 4 characters.\n");
+    if (strlen(trimmed_code) != 2*MAX_COLORS - 1) {
+        fprintf(stderr, "Invalid code length. It must be exactly 7 characters.\n");
         return;
     }
 
-    for (int i = 0; i < MAX_COLORS; i++) {
+    for (int i = 0; i < 2*MAX_COLORS; i += 2) {
+        printf("trimmed_code[%d]: %c\n", i, trimmed_code[i]);
+        printf("trimmed_code[%d]: %c\n", i+1, trimmed_code[i+1]);
         if (strchr(COLOR_OPTIONS, trimmed_code[i]) == NULL) {
             fprintf(stderr, "Invalid color code. Use only R, G, B, Y, O, or P.\n");
+            return;
+        }
+        if (trimmed_code[i+1] != ' ' && trimmed_code[i+1] != '\0') {
+            fprintf(stderr, "Invalid code format. Use spacing.\n");
             return;
         }
     }
 
     char message[BUFFER_SIZE];
+    memset(message, 0, sizeof(message));
     snprintf(message, sizeof(message), "TRY %s %s %d\n",plidCurr, trimmed_code, currTries+1);
 
     char response[BUFFER_SIZE];
@@ -321,8 +339,10 @@ void try_code(const char *code) {
 void receive_try_msg(const char *response) {
     char status[BUFFER_SIZE];
     int black = 0, white = 0;
-    char code[MAX_COLORS + 1] = {0};
+    char code[MAX_COLORS + 1];
     int tries;
+    memset(status, 0, sizeof(status));
+    memset(code, 0, sizeof(code));
 
     if (sscanf(response, "RTR %s %d %d %d %4s", status, &tries, &black, &white, code) < 1) {
         fprintf(stderr, "Invalid response from server: %s\n", response);
@@ -377,6 +397,7 @@ void debug_game(const char *plid, unsigned int time, const char *code) {
     }
 
     char message[BUFFER_SIZE];
+    memset(message, 0, sizeof(message));
     snprintf(message, sizeof(message), "DBG %s %03d %s\n", plid, time, code); // Time padded to 3 digits
 
     char response[BUFFER_SIZE];
@@ -388,11 +409,12 @@ void debug_game(const char *plid, unsigned int time, const char *code) {
     }
 
     printf("[DEBUG] Received response: %s", response);
-    receive_debug_msg(response);
+    receive_debug_msg(plid, response);
 }
 
-void receive_debug_msg(const char *response) {
+void receive_debug_msg(const char *plid, const char *response) {
     char status[BUFFER_SIZE];
+    memset(status, 0, sizeof(status));
 
     if (sscanf(response, "RDB %s", status) != 1) {
         fprintf(stderr, "Invalid response from server: %s\n", response);
@@ -400,6 +422,9 @@ void receive_debug_msg(const char *response) {
     }
     if (strcmp(status, "OK") == 0) {
         printf("Debug game started successfully! You can begin playing.\n");
+        currPlayer = 1;
+        currTries = 0;
+        strcpy(plidCurr, plid);
     } else if (strcmp(status, "NOK") == 0) {
         printf("Debug game not started: an ongoing game exists for this player.\n");
     } else if (strcmp(status, "ERR") == 0) {
@@ -417,6 +442,7 @@ void quit_game() {
     }
 
     char message[BUFFER_SIZE];
+    memset(message, 0, sizeof(message));
     snprintf(message, sizeof(message), "QUT %s\n", plidCurr);
 
     char response[BUFFER_SIZE];
@@ -433,7 +459,9 @@ void quit_game() {
 
 void receive_quit_msg(const char *response) {
     char status[BUFFER_SIZE];
-    char secret_code[MAX_COLORS + 1] = {0};
+    memset(status, 0, sizeof(status));
+    char secret_code[MAX_COLORS + 1];
+    memset(secret_code, 0, sizeof(secret_code));
 
     int matched = sscanf(response, "RQT %s %4s", status, secret_code);
     if (matched < 1) {
