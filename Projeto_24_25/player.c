@@ -4,6 +4,7 @@
 #include <string.h>
 #include <errno.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -20,29 +21,45 @@ int GSport = DEFAULT_PORT;               // Default port
 char plidCurr[ID_SIZE + 1];              // Current player ID
 int currPlayer = 0;                      // Flag to check if a player is playing or not
 int currTries = 0;                       // Number of tries of the current player (it starts with the "1st try")
-//TODO eu presumo que apos um startgame este terminal só pode usar outro plid se fizer quit
 
-void get_arguments(int argc, char *argv[]){
+void resolve_hostname(const char *hostname) {
+    struct addrinfo hints, *res;
+    char ipstr[INET_ADDRSTRLEN]; // Buffer for IPv4 string representation
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;  // IPv4 only
+    hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
+
+    if (getaddrinfo(hostname, NULL, &hints, &res) != 0) {
+        fprintf(stderr, "Error: Unable to resolve hostname '%s'\n", hostname);
+        exit(EXIT_FAILURE);
+    }
+
+    struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
+    inet_ntop(AF_INET, &(ipv4->sin_addr), ipstr, sizeof(ipstr));
+
+    GSIP = strdup(ipstr); // Save the resolved IP address
+    freeaddrinfo(res);
+}
+
+void get_arguments(int argc, char *argv[]) {
     int opt, ip_set = 0, port_set = 0;
     while ((opt = getopt(argc, argv, "n:p:")) != -1) {
         switch (opt) {
             case 'n':
                 if (ip_set) {
                     usage(argv[0]);
-                    exit(EXIT_FAILURE);
                 }
-                if (is_valid_ip(optarg)) {
-                    GSIP = optarg;
-                } else {
-                    fprintf(stderr, "Error: Invalid IP address\n");
-                    exit(EXIT_FAILURE);
-                }
+                resolve_hostname(optarg); // Resolve the hostname to an IP
                 ip_set = 1;
                 break;
 
             case 'p':
                 if (port_set) {
                     usage(argv[0]);
+                }
+                if (!is_number(optarg)) {
+                    fprintf(stderr, "Error: Invalid port number\n");
                     exit(EXIT_FAILURE);
                 }
                 GSport = atoi(optarg);
@@ -55,8 +72,11 @@ void get_arguments(int argc, char *argv[]){
 
             default:
                 usage(argv[0]);
-                exit(EXIT_FAILURE);
         }
+    }
+
+    if (!ip_set || !port_set) {
+        usage(argv[0]);
     }
 
     printf("Game Server IP: %s\n", GSIP);
@@ -93,9 +113,26 @@ int is_valid_ip(const char *ip) {
     return inet_pton(AF_INET, ip, &(sa.sin_addr)) != 0;
 }
 
+void sig_detected(int sig) {
+    if (currPlayer) {
+        printf("Game interrupted. Exiting...\n");
+        //quit_game(); //TODO só no final podemos tirar isto senão semrpe que fizermos ctrl c o server tem estar ligado e o crlh
+        exit(0);
+    } else {
+        printf("Exiting...\n");
+        exit(0);
+        //exit_game();    //TODO só no final podemos tirar isto senão semrpe que fizermos ctrl c o server tem estar ligado e o crlh
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     get_arguments(argc, argv);
+
+    signal(SIGINT, sig_detected);
+
+    int sockfd;
+    struct addrinfo *res;
 
     while (1) {
         printf("Enter command: \n");
@@ -140,15 +177,27 @@ int main(int argc, char *argv[]) {
                 break;
             }
 
-            /* TCP  TODO
             case CMD_SHOW_TRIALS:
-                show_trials();
+
+                sockfd = connect_to_server(&res);
+                if (sockfd < 0) continue;
+
+                send_show_trials_msg(sockfd);
+
+                close(sockfd);
+                freeaddrinfo(res);
                 break;
 
             case CMD_SCOREBOARD:
-                show_scoreboard();
+
+                sockfd = connect_to_server(&res);
+                if (sockfd < 0) continue;
+
+                send_show_scoreboard_msg(sockfd);
+
+                close(sockfd);
+                freeaddrinfo(res);
                 break;
-            */
 
             case CMD_QUIT:
 
@@ -497,16 +546,175 @@ void end_game() {
     //TODO
 }
 
-// Function to show trials
-void show_trials() {
-    // TCP connection to GS and request trials list
-    printf("Showing trials...\n");
-    // TCP request and response handling here (implementation-specific)
+int send_tcp_message(int fd, const char *message) {
+    size_t total_written = 0;
+    size_t message_length = strlen(message);
+
+    while (total_written < message_length) {
+        ssize_t bytes_written = write(fd, message + total_written, message_length - total_written);
+        if (bytes_written < 0) {
+            perror("ERROR: Failed to send message");
+            return -1;
+        }
+        total_written += bytes_written;
+    }
+    return 0;
 }
 
-// Function to show scoreboard
-void show_scoreboard() {
-    // TCP connection to GS and request scoreboard
-    printf("Showing scoreboard...\n");
-    // TCP request and response handling here (implementation-specific)
+int read_tcp_socket(int fd, char *buffer, size_t size) {
+    memset(buffer, 0, size); // Initialize buffer
+    size_t bytes_read = 0;
+
+    while (bytes_read < size - 1) {
+        ssize_t n = read(fd, buffer + bytes_read, size - bytes_read - 1);
+        if (n == 0) {
+            // Connection closed by the peer
+            break;
+        } else if (n < 0) {
+            perror("ERROR: Failed to read from socket");
+            return -1;
+        }
+        bytes_read += n;
+
+        // Stop if we detect a newline, indicating the end of the message
+        if (buffer[bytes_read - 1] == '\n') {
+            break;
+        }
+    }
+
+    buffer[bytes_read] = '\0'; // Null-terminate the response
+    return 0;
+}
+
+int connect_to_server(struct addrinfo **res) {
+    struct addrinfo hints;
+    int sockfd;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;       // IPv4
+    hints.ai_socktype = SOCK_STREAM; // TCP
+
+    char port_str[6];
+    snprintf(port_str, sizeof(port_str), "%d", GSport);
+
+    if (getaddrinfo(GSIP, port_str, &hints, res) != 0) {
+        perror("ERROR: Failed to resolve server address");
+        return -1;
+    }
+
+    sockfd = socket((*res)->ai_family, (*res)->ai_socktype, (*res)->ai_protocol);
+    if (sockfd == -1) {
+        perror("ERROR: Failed to create socket");
+        freeaddrinfo(*res);
+        return -1;
+    }
+
+    if (connect(sockfd, (*res)->ai_addr, (*res)->ai_addrlen) == -1) {
+        perror("ERROR: Connect to server failed");
+        close(sockfd);
+        freeaddrinfo(*res);
+        return -1;
+    }
+
+    return sockfd;
+}
+
+void send_show_trials_msg(int fd) {
+    char message[BUFFER_SIZE];
+    snprintf(message, sizeof(message), "STR %d\n", currPlayer);
+
+    if (send_tcp_message(fd, message) == -1) {
+        fprintf(stderr, "ERROR: Failed to send 'show_trials' message\n");
+    }
+
+    receive_show_trials_msg(fd);
+}
+
+void receive_show_trials_msg(int fd) {
+    char response[BUFFER_SIZE * 10];
+    if (read_tcp_socket(fd, response, sizeof(response)) == -1) {
+        fprintf(stderr, "ERROR: Failed to receive 'show_trials' response\n");
+        return;
+    }
+
+    char status[10], filename[1024]; //TODO not sure o tamanho que ponho
+    int file_size;
+    char *file_data = NULL;
+
+    if (sscanf(response, "RST %s %s %d\n", status, filename, &file_size) >= 1) {
+        if (strcmp(status, "ACT") == 0 || strcmp(status, "FIN") == 0) {
+            file_data = strstr(response, "\n\n") + 2;
+            if (!file_data || strlen(file_data) != (size_t)file_size) {
+                fprintf(stderr, "Incomplete file data.\n");
+                return;
+            }
+
+            FILE *fp = fopen(filename, "w");
+            if (!fp) {
+                perror("Error saving file");
+                return;
+            }
+            fwrite(file_data, 1, file_size, fp);
+            fclose(fp);
+
+            printf("Trials saved to '%s'.\n", filename);
+            printf("Game Summary:\n%s\n", file_data);
+        } else if (strcmp(status, "NOK") == 0) {
+            printf("No game data available for player '%d'.\n", currPlayer);
+        } else {
+            printf("Unexpected server response: %s\n", response);
+        }
+    } else {
+        printf("Invalid response format.\n");
+    }
+}
+
+void send_show_scoreboard_msg(int fd) {
+    char message[BUFFER_SIZE];
+    snprintf(message, sizeof(message), "SSB\n");
+
+    if (send_tcp_message(fd, message) == -1) {
+        fprintf(stderr, "ERROR: Failed to send 'show_scoreboard' message\n");
+    }
+
+    receive_show_scoreboard_msg(fd);
+}
+
+void receive_show_scoreboard_msg(int fd) {
+    char response[BUFFER_SIZE * 10];
+    if (read_tcp_socket(fd, response, sizeof(response)) == -1) {
+        fprintf(stderr, "ERROR: Failed to receive 'show_scoreboard' response\n");
+        return;
+    }
+
+    char status[10], filename[1024]; //TODO
+    int file_size;
+    char *file_data = NULL;
+
+    if (sscanf(response, "RSS %s %s %d\n", status, filename, &file_size) >= 1) {
+        if (strcmp(status, "OK") == 0) {
+            file_data = strstr(response, "\n\n") + 2;
+            if (!file_data || strlen(file_data) != (size_t)file_size) {
+                fprintf(stderr, "Incomplete file data.\n");
+                return;
+            }
+
+            FILE *fp = fopen(filename, "w");
+            if (!fp) {
+                perror("Error saving file");
+                return;
+            }
+            fwrite(file_data, 1, file_size, fp);
+            fclose(fp);
+
+            printf("Scoreboard saved to '%s'.\n", filename);
+            printf("Top 10 Scores:\n%s\n", file_data);
+        } else if (strcmp(status, "EMPTY") == 0) {
+            printf("The scoreboard is empty.\n");
+        } else {
+            printf("Unexpected server response: %s\n", response);
+        }
+    } else {
+        printf("Invalid response format.\n");
+    }
 }

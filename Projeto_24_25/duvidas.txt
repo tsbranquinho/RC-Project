@@ -3,7 +3,8 @@ quando dá invalid try tem de se avançar uma try no player?
 documento stor
 não consigo fazer de server para o pc do rafa
 
-fazer dicas
+fazer dicas (tipo dizer o sitio da peça msm) acrescentar um menu de HELP no player 
 n = recvfrom para dar tamanho correto
 
 podemos testar com o servidor daqui
+

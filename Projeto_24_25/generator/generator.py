@@ -1,39 +1,41 @@
-import random
-import os
+from fpdf import FPDF
 
-# Constants
-PLID = "123456"  # Example player ID for testing
-MAX_PLAYTIME = 300  # Max playtime for start and debug commands (between 0 and 600)
-COLORS = ['R', 'G', 'B', 'Y', 'O', 'P']
-OUTPUT_FILE = "test_commands.txt"  # Single output file
+# Criar a classe PDF personalizada
+class PDF(FPDF):
+    def header(self):
+        # Título da ficha
+        self.set_font('Arial', 'B', 16)
+        self.cell(0, 10, 'Ficha de Expressão Plástica – Natal', 0, 1, 'C')
+        self.ln(5)
 
-# Function to generate a random guess for the try command
-def generate_random_guess():
-    return ''.join(random.choices(COLORS, k=4))
+    def footer(self):
+        # Número da página no rodapé
+        self.set_y(-15)
+        self.set_font('Arial', 'I', 12)
+        self.cell(0, 10, f'Página {self.page_no()}', 0, 0, 'C')
 
-# Function to create a single file with all test commands
-def create_combined_command_file(plid, max_playtime, num_tries=4):
-    with open(OUTPUT_FILE, 'w') as file:
-        # Write the start command
-        file.write(f"start {plid} {max_playtime}\n")
-        file.write("\n")  # Blank line for readability
+    def add_title(self, title):
+        self.set_font('Arial', 'B', 14)
+        self.cell(0, 10, title, 0, 1)
+        self.ln(2)
 
-        # Write the try commands
-        for i in range(1, num_tries + 1):
-            guess = generate_random_guess()
-            file.write(f"try {guess}\n")
+    def add_text(self, text):
+        self.set_font('Arial', '', 12)
+        self.multi_cell(0, 10, text)
+        self.ln(4)
 
-        file.write("\n")  # Blank line for readability
+# Criar uma instância do PDF
+pdf = PDF()
+pdf.set_auto_page_break(auto=True, margin=15)
+pdf.add_page()
 
-        # Write the quit command
-        file.write("quit\n")
-        file.write("\n")  # Blank line for readability
+# Adicionar o conteúdo à ficha
+pdf.set_font('Arial', '', 12)
+pdf.add_title("Nome do Aluno: _________________________  Data: ___/____/___")
 
-        # Write the debug command with a known secret key
-        file.write(f"debug {plid} {max_playtime} RGBY\n")
-
-    print(f"Combined test command file created: {OUTPUT_FILE}")
-
-# Run the function to create the test file
-if __name__ == "__main__":
-    create_combined_command_file(PLID, MAX_PLAYTIME, num_tries=4)
+# Conteúdo das atividades
+activities = [
+    ("1. Desenho Criativo de Natal",
+     "Objetivo: Criar um desenho que represente o espírito natalino.\n"
+     "Instruções:\n"
+     "- Desenhe uma cena de")]
