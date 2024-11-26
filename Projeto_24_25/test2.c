@@ -1,33 +1,48 @@
-// test.c
-#include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <string.h>
+#include <stdio.h>
+#define PORT "58001"
 
-int main(void)
-{
-struct addrinfo hints,*res,*p;
-int errcode;
-char buffer[INET_ADDRSTRLEN];
-struct in_addr *addr;
-memset(&hints,0,sizeof hints);
-hints.ai_family=AF_INET;//IPv4
-hints.ai_socktype=SOCK_STREAM;
-hints.ai_flags=AI_CANONNAME;
-if((errcode=getaddrinfo("DESKTOP-0O2LU26",NULL,&hints,&res))!=0)
-fprintf(stderr,"error: getaddrinfo: %s\n",gai_strerror(errcode));
-else{
-printf("canonical hostname: %s\n",res->ai_canonname);
-for(p=res;p!=NULL;p=p->ai_next){
-addr=&((struct sockaddr_in *)p->ai_addr)->sin_addr;
-printf("internet address: %s (%08lX)\n",
-inet_ntop(p->ai_family,addr,buffer,sizeof buffer),
-(long unsigned int)ntohl(addr->s_addr));
+
+int main() {
+    int fd, errcode;
+    ssize_t n;
+    socklen_t addrlen;
+    struct addrinfo hints, *res;
+    struct sockaddr_in addr;
+    char buffer[128];
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);     // UDP socket
+    if (fd == -1) /* error */ exit(1);
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;              // IPv4
+    hints.ai_socktype = SOCK_DGRAM;         // UDP socket
+
+    errcode = getaddrinfo("tejo.tecnico.ulisboa.pt", PORT, &hints, &res);
+    if (errcode != 0) {
+        printf("erro");
+        exit(1);
+    };
+    n = sendto(fd, "Hello!\n", 7, 0, res->ai_addr, res->ai_addrlen);
+    if (n == -1) /* error */ exit(1);
+
+    addrlen = sizeof(addr);
+    n = recvfrom(fd, buffer, 128, 0,
+                (struct sockaddr *)&addr, &addrlen);
+    if (n == -1) /* error */ exit(1);
+
+    write(1, "echo: ", 6);
+    write(1, buffer, n);
+
+    freeaddrinfo(res);
+    close(fd);
+
 }
-freeaddrinfo(res);
-}
-exit(0);
-}
+

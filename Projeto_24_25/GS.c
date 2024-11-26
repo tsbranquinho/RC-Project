@@ -270,8 +270,8 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     }
 
     if (player->current_game->trial_count > MAX_TRIALS) {
-        char temp[MAX_COLORS + 1];
-        convert_code(temp, player->current_game->secret_key);
+        char temp[2*MAX_COLORS];
+        convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
         printf("[DEBUG] temp: %s\n", temp);
         snprintf(response, sizeof(response), "RTR ENT -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
@@ -280,8 +280,8 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     }
 
     if (time(NULL) - player->current_game->start_time > player->current_game->max_time) {
-        char temp[MAX_COLORS + 1];
-        convert_code(temp, player->current_game->secret_key);
+        char temp[2*MAX_COLORS];
+        convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
         printf("[DEBUG] temp: %s\n", temp);
         snprintf(response, sizeof(response), "RTR ETM -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
@@ -325,7 +325,9 @@ void handle_quit_request(const char *request, struct sockaddr_in *client_addr, s
     }
 
     char response[BUFFER_SIZE];
-    snprintf(response, sizeof(response), "RQT OK %s\n", player->current_game->secret_key);
+    char temp[2*MAX_COLORS];
+    convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
+    snprintf(response, sizeof(response), "RQT OK %s\n", temp);
     for (Trials *trial = player->current_game->trial; trial != NULL; trial = trial->prev) {
         free(trial);
     }
@@ -487,10 +489,20 @@ void insert_player(Player *player) {
     hash_table[index] = player;
 }
 
-void convert_code(char *temp, char *secret) {
-    for (int i = 0; i < MAX_COLORS; i++) {
-        temp[2*i] = secret[i];
-        temp[2*i+1] = ' ';
+void convert_code(char *temp, char *secret, int mode) {
+    switch(mode) {
+        case SECRET_TO_CODE:
+            for (int i = 0; i < MAX_COLORS; i++) {
+                temp[2*i] = secret[i];
+                temp[2*i+1] = ' ';
+            }
+            temp[2*MAX_COLORS-1] = '\0';
+            break;
+        case CODE_TO_SECRET:
+            for (int i = 0; i < MAX_COLORS; i++) {
+                secret[i] = temp[2*i];
+            }
+            secret[MAX_COLORS] = '\0';
     }
-    temp[2*MAX_COLORS-1] = '\0';
+
 }

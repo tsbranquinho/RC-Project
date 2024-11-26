@@ -5,6 +5,7 @@ não consigo fazer de server para o pc do rafa
 
 fazer dicas (tipo dizer o sitio da peça msm) acrescentar um menu de HELP no player 
 n = recvfrom para dar tamanho correto
+falta sair do jogo quando dá etm ou ent
 
 podemos testar com o servidor daqui
 

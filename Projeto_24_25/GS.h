@@ -6,7 +6,9 @@
 
 #define MAX_PORT 65535
 #define MAX_PLAYERS 100
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 128
+#define SECRET_TO_CODE 0
+#define CODE_TO_SECRET 1
 
 typedef struct Trials {
     char guess[MAX_COLORS + 1];
@@ -44,6 +46,6 @@ void generate_random_key(char *key);
 int calculate_feedback(const char *guess, const char *secret, int *black, int *white);
 unsigned int hash(const char *plid);
 void insert_player(Player *player);
-void convert_code(char *temp, char *secret);
+void convert_code(char *temp, char *secret, int mode);
 
 #endif

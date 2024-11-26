@@ -374,6 +374,7 @@ void try_code(const char *code) {
     snprintf(message, sizeof(message), "TRY %s %s %d\n",plidCurr, trimmed_code, currTries+1);
 
     char response[BUFFER_SIZE];
+    memset(response, 0, sizeof(response));
     printf("[DEBUG] Sending try request: %s", message);
 
     if (send_udp_skt(message, response, sizeof(response), GSIP, GSport) < 0) {
@@ -388,15 +389,21 @@ void try_code(const char *code) {
 void receive_try_msg(const char *response) {
     char status[BUFFER_SIZE];
     int black = 0, white = 0;
-    char code[MAX_COLORS + 1];
+    char code[2 * MAX_COLORS];
     int tries;
     memset(status, 0, sizeof(status));
     memset(code, 0, sizeof(code));
 
-    if (sscanf(response, "RTR %s %d %d %d %4s", status, &tries, &black, &white, code) < 1) {
+    if (sscanf(response, "RTR %s %d %d %d %[^\n]", status, &tries, &black, &white, code) < 1) {
         fprintf(stderr, "Invalid response from server: %s\n", response);
         return;
     }
+    code[2*MAX_COLORS] = '\0';
+    printf("check\n");
+    printf("status: %s\n", status);
+
+    //TODO: verificar para cada resposta de status
+    //    : verificar se o code está bem mandado
 
     if (strcmp(status, "OK") == 0) {
         currTries = tries;
@@ -509,10 +516,10 @@ void quit_game() {
 void receive_quit_msg(const char *response) {
     char status[BUFFER_SIZE];
     memset(status, 0, sizeof(status));
-    char secret_code[MAX_COLORS + 1];
+    char secret_code[2*MAX_COLORS];
     memset(secret_code, 0, sizeof(secret_code));
 
-    int matched = sscanf(response, "RQT %s %4s", status, secret_code);
+    int matched = sscanf(response, "RQT %s %[^\n]", status, secret_code);
     if (matched < 1) {
         fprintf(stderr, "Invalid response from server: %s\n", response);
         return;
