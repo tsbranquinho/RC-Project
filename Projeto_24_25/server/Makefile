@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -g -Iinclude
 BUILD_DIR = build
 
-SRCS = src/server.c ../utils/common.c
+SRCS = src/*.c ../utils/common.c
 OBJS = $(SRCS:.c=.o)
 
 all: server 

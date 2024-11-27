@@ -1,6 +1,19 @@
-#ifndef __PLAYER_H__
-#define __PLAYER_H__
+#ifndef __CONSTANTS_H__
+#define __CONSTANTS_H__
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <signal.h>
+#include <time.h>
+#include <sys/time.h>
 #include "../../utils/common.h"
 
 #define MAX_PORT 65535              // Maximum port number

@@ -1,21 +1,23 @@
-.PHONY: all ser cli run-server run-client clean
+.PHONY: all server client run-server run-client clean
 
-all: ser cli
+all: server client
+	@echo "Build complete!"
 
-ser: 
-	$(MAKE) -C server
+server: 
+	@$(MAKE) -C server --no-print-directory
 
-cli:
-	$(MAKE) -C client
+client:
+	@$(MAKE) -C client --no-print-directory
 
 run-server:
-	@./server/build/server
+	@$(MAKE) -C server run --no-print-directory
 
 run-client:
-	@./client/build/client
+	@$(MAKE) -C client run --no-print-directory
 
 clean:
-	$(MAKE) -C server clean
-	$(MAKE) -C client clean
+	@$(MAKE) -C server clean --no-print-directory
+	@$(MAKE) -C client clean --no-print-directory
+	@echo "Clean complete!"
 
 

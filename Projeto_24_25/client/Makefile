@@ -1,20 +1,32 @@
 CC = gcc
 CFLAGS = -Wall -g -Iinclude
 BUILD_DIR = build
+SRC_DIR = src
+UTILS_DIR = ../utils
+TCP_DIR = $(SRC_DIR)/tcp
+UDP_DIR = $(SRC_DIR)/udp
 
-SRCS = src/client.c ../utils/common.c
+SRCS = $(SRC_DIR)/main.c \
+       $(wildcard $(TCP_DIR)/*.c) \
+       $(wildcard $(UDP_DIR)/*.c) \
+       $(UTILS_DIR)/common.c
 OBJS = $(SRCS:.c=.o)
 
-all: client
+# Final executable
+EXEC = $(BUILD_DIR)/client
 
-client: $(OBJS)
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/client $(OBJS)
+all: $(EXEC) 
+	@echo "Client build complete!"
 
-run:
-	$(BUILD_DIR)/client $(ARGS)
+$(EXEC): $(OBJS)
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/client $(OBJS)
+
+run: $(EXEC)
+	@$(EXEC) $(ARGS)
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f src/*.o $(BUILD_DIR)/client ../utils/src/*.o
+	@rm -f $(OBJS) $(EXEC) $(UTILS_DIR)/common.o *.o
+	@echo "Client clean complete!"

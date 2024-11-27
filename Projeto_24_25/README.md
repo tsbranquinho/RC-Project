@@ -1,3 +1,8 @@
+-> Para correres faz make nesta pasta
+-> Depois faz make run-server ou make run-client
+-> Também podes ir a cada página individual e fazer make e make run
+-> Isto pode ser mudado, mas por enquanto também está temporário porque quero silenciar todos os makes
+
 quando vence ou perde, termina-se o jogo do lado do cliente?
 quando dá invalid try tem de se avançar uma try no player?
 documento stor
