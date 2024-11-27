@@ -1,12 +1,21 @@
-CC = gcc
-CFLAGS = -pthread -Wall
-TARGETS = player GS hacker
-COMMON_SRC = common.c
+.PHONY: all ser cli run-server run-client clean
 
-all: $(TARGETS)
+all: ser cli
 
-$(TARGETS): %: $(COMMON_SRC) %.c
-	$(CC) $(CFLAGS) $^ -o $@
+ser: 
+	$(MAKE) -C server
+
+cli:
+	$(MAKE) -C client
+
+run-server:
+	@./server/build/server
+
+run-client:
+	@./client/build/client
 
 clean:
-	rm -f $(TARGETS)
+	$(MAKE) -C server clean
+	$(MAKE) -C client clean
+
+

@@ -11,8 +11,8 @@
 #include <signal.h>
 #include <time.h>
 #include <sys/time.h>
-#include "player.h"
-#include "common.h"
+#include "../include/client.h"
+#include "../../utils/common.h"
 
 
 //Global variables, they will never change.

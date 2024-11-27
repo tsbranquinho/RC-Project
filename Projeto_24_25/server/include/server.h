@@ -1,7 +1,7 @@
 #ifndef __GS_H__
 #define __GS_H__
 
-#include "common.h"
+#include "../../utils/common.h"
 
 
 #define MAX_PORT 65535

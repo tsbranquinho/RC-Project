@@ -8,8 +8,8 @@
 #include <sys/types.h>  // For data types
 #include <netinet/in.h>  // For sockaddr_in
 #include <time.h>  // For time functions
-#include "GS.h"
-#include "common.h"
+#include "../include/server.h"
+#include "../../utils/common.h"
 
 
 Player *hash_table[MAX_PLAYERS] = {NULL};

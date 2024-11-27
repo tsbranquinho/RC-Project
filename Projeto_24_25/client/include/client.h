@@ -1,7 +1,7 @@
 #ifndef __PLAYER_H__
 #define __PLAYER_H__
 
-#include "common.h"
+#include "../../utils/common.h"
 
 #define MAX_PORT 65535              // Maximum port number
 #define BUFFER_SIZE 64              // Buffer size for messages
