@@ -10,6 +10,7 @@
         "socket.h": "c",
         "prototypes.h": "c",
         "globals.h": "c",
-        "constants.h": "c"
+        "constants.h": "c",
+        "time.h": "c"
     }
 }

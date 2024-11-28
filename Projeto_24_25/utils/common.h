@@ -10,7 +10,11 @@
 #define MAX_TRIALS 8                // Maximum number of trials
 #define EXIT_FAILURE 1              // Exit failure
 #define COLOR_OPTIONS "RGBYOP"      // Possible colors
+#define SECRET_TO_CODE 0
+#define CODE_TO_SECRET 1
 
 int is_number(const char *str);
+int color_to_index(char color);
+void convert_code(char *temp, char *secret, int mode);
 
 #endif

@@ -7,8 +7,7 @@ Command get_next_command(char *input);
 void sig_detected(int sig);
 int is_valid_ip(const char *ip);
 void usage(const char *progname);
-void start_game(const char *plid, unsigned int time);
-void receive_start_msg(const char *response, const char *plid);
+//trials.c
 void send_show_trials_msg(int sockfd);
 void receive_show_trials_msg(int fd);
 //scoreboard.c
