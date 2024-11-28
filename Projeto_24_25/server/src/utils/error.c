@@ -2,15 +2,10 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <dirent.h>
-#include <unistd.h>
-
-void delete_files_in_directory(const char *dir_path) {
+// Função recursiva para apagar o conteúdo de um diretório
+void delete_directory_contents(const char *path) {
     struct dirent *entry;
-    DIR *dir = opendir(dir_path);
+    DIR *dir = opendir(path);
 
     if (dir == NULL) {
         perror("Error opening directory");
@@ -18,24 +13,28 @@ void delete_files_in_directory(const char *dir_path) {
     }
 
     while ((entry = readdir(dir)) != NULL) {
+        // Ignorar os diretórios "." e ".."
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
             continue;
         }
 
-        char filepath[1024];
-        snprintf(filepath, sizeof(filepath), "%s/%s", dir_path, entry->d_name);
+        char full_path[1024];
+        snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
 
-        struct stat path_stat;
-        if (stat(filepath, &path_stat) == -1) {
-            perror("Error getting file info");
-            continue;
-        }
-
-        // Verifica se é um arquivo regular
-        if (S_ISREG(path_stat.st_mode)) {
-            if (remove(filepath) != 0) {
-                fprintf(stderr, "Error deleting file: %s\n", filepath);
+        struct stat statbuf;
+        if (stat(full_path, &statbuf) == 0) {
+            if (S_ISDIR(statbuf.st_mode)) {
+                delete_directory_contents(full_path);
+                if (rmdir(full_path) != 0) {
+                    perror("Error deleting directory");
+                }
+            } else {
+                if (remove(full_path) != 0) {
+                    perror("Error deleting file");
+                }
             }
+        } else {
+            perror("Error getting file information");
         }
     }
 
@@ -46,10 +45,10 @@ void sig_detected(int sig) {
     printf("Shutting down the server...\n");
     // TODO: free memory, close all sockets
 
-    // Deletar apenas arquivos das pastas
-    delete_files_in_directory("GAMES");
-    delete_files_in_directory("SCORES");
+    delete_directory_contents("GAMES");
 
-    printf("All files deleted.\n");
+    delete_directory_contents("SCORES");
+
+    printf("Deleted all files and directories.\n");
     exit(0);
 }

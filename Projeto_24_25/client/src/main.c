@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     int status;
 
     while (1) {
-        printf("Enter command: \n");
+        printf("Enter command: ");
         char input[MAX_COMMAND_SIZE];
         memset(input, 0, sizeof(input));
         

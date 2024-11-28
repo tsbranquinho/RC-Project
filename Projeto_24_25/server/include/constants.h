@@ -35,7 +35,9 @@ typedef struct Game {
     int trial_count;
     Trials *trial;
     time_t start_time;
+    time_t last_time;
     int max_time;
+    char end_status;
     char filename[GAME_FILE_NAME_SIZE+6]; // 6 for "GAMES/"
 } Game;
 

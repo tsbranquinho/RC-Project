@@ -4,30 +4,15 @@
 
 void handle_try_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
     char plid[ID_SIZE + 1];
-    char aux_guess[2*MAX_COLORS];
+    char aux_guess[2*MAX_COLORS]; // will be stored in check_try_err
     int trial_num;
+    int n_args = sscanf(request, "TRY %6s %[^0-9] %d", plid, aux_guess, &trial_num);
 
-    if (sscanf(request, "TRY %6s %[^0-9] %d", plid, aux_guess, &trial_num) != 3) {
+    // ERR firsts
+    if (check_try_err(request, n_args, aux_guess, &trial_num) < 0) {
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         return;
-    }
-
-    aux_guess[2*MAX_COLORS-1] = '\0';
-
-    if (strlen(aux_guess) != 2*MAX_COLORS-1) {
-        send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
-    }
-    for (int i = 0; i < 2*MAX_COLORS; i += 2) {
-        if (strchr(COLOR_OPTIONS, aux_guess[i]) == NULL) {
-            send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
-            return;
-        }
-        if (aux_guess[i+1] != ' ' && aux_guess[i+1] != '\0') {
-            send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
-            return;
-        }
-    }
+    }	
 
     char guess[MAX_COLORS + 1];
     for (int i = 0; i < MAX_COLORS; i++) {
@@ -35,65 +20,46 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     }
     guess[MAX_COLORS] = '\0';
 
+    // NOK
     Player *player = find_player(plid);
-    player->current_game->trial_count++;
-    if (!player || !player->is_playing) {
+    if (check_try_nok(plid, player) < 0) {
         send_udp_response("RTR NOK\n", client_addr, client_addr_len, udp_socket);
         return;
     }
-    
+    player->current_game->trial_count++;
     int black = 0, white = 0;
     char response[BUFFER_SIZE];
-    time_t current_time;
 
-    if (time(&current_time) - player->current_game->start_time > player->current_game->max_time) {
-        char temp[2*MAX_COLORS];
-        convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
-        printf("[DEBUG] temp: %s\n", temp);
-        snprintf(response, sizeof(response), "RTR ETM -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
+    // ETM
+    if (check_try_etm(player, response) < 0) {
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
         end_game(player);
         return;
     }
 
-    if (player->current_game->trial_count == trial_num + 1) {
-        // pode ser Invalid, o jogo estar um à frente do suposto
-        Trials *aux = malloc(sizeof(Trials));
-        strcpy(aux->guess, guess);
-        if (player->current_game->trial != NULL) {
-            if (strcmp(player->current_game->trial->guess, guess) != 0) {
-                send_udp_response("RTR INV\n", client_addr, client_addr_len, udp_socket);
-                player->current_game->trial_count--;
-            }
-            else {
-                player->current_game->trial_count--;
-                snprintf(response, sizeof(response), "RTR OK %d %d %d\n", trial_num, black, white);
-                send_udp_response(response, client_addr, client_addr_len, udp_socket);
-            }
-        }
-        else {
-            send_udp_response("RTR INV\n", client_addr, client_addr_len, udp_socket);
-            player->current_game->trial_count--;
-        }
-        free(aux);
+    //INV
+    int ret = check_try_inv(player, trial_num, guess);
+    if (ret == -1) {
+        send_udp_response("RTR INV\n", client_addr, client_addr_len, udp_socket);
+        player->current_game->trial_count--;
+        return;
+    }
+    else if (ret == 1) {
+        snprintf(response, sizeof(response), "RTR OK %d %d %d\n", trial_num, player->current_game->trial->black, player->current_game->trial->white);
+        send_udp_response(response, client_addr, client_addr_len, udp_socket);
+        player->current_game->trial_count--;
         return;
     }
 
-    for (Trials *trial = player->current_game->trial; trial != NULL; trial = trial->prev) {
-        if (strcmp(trial->guess, guess) == 0) {
-            player->current_game->trial_count--;
-            send_udp_response("RTR DUP\n", client_addr, client_addr_len, udp_socket);
-            return;
-        }
+    //DUP
+    if (check_try_dup(player, guess) < 0) {
+        send_udp_response("RTR DUP\n", client_addr, client_addr_len, udp_socket);
+        return;
     }
 
-    if (player->current_game->trial_count > MAX_TRIALS) {
-        char temp[2*MAX_COLORS];
-        convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
-        printf("[DEBUG] temp: %s\n", temp);
-        snprintf(response, sizeof(response), "RTR ENT -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
+    //ENT
+    if (check_try_ent(player, response) < 0) {
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
-        end_game(player);
         return;
     }
 
@@ -101,34 +67,109 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         send_udp_response("RTR ERR\n \0", client_addr, client_addr_len, udp_socket);
         return;
     }
-
-    if (black == MAX_COLORS) {
-        snprintf(response, sizeof(response), "RTR OK %d 4 0\n", trial_num);
-        player->is_playing = 0;
-    } else {
-        snprintf(response, sizeof(response), "RTR OK %d %d %d\n", trial_num, black, white);
-    }
-    Trials *trial = malloc(sizeof(Trials));
-    strncpy(trial->guess, guess, MAX_COLORS);
-    trial->black = black;
-    trial->white = white;
-    trial->prev = player->current_game->trial;
-    player->current_game->trial = trial;
-
-    FILE *fp = fopen(player->current_game->filename, "a");
-    if (!fp) {
-        perror("Error opening file");
+    
+    if (write_try_to_file(player, guess, black, white) < 0) {
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         return;
     }
-    char buffer[128];
-    memset(buffer, 0, sizeof(buffer));
-    snprintf(buffer, sizeof(buffer), "%d: %s %d %d %ld\n",
-            trial_num, guess, black, white, current_time);
-    fwrite(buffer, 1, strlen(buffer), fp);
-    fclose(fp);
+
+    if (black == MAX_COLORS) {
+        //TODO: fechar o jogo e limpar do lado do servidor
+        snprintf(response, sizeof(response), "RTR OK %d 4 0\n", trial_num);
+        player->current_game->end_status = 'W';
+        end_game(player);
+    } else {
+        snprintf(response, sizeof(response), "RTR OK %d %d %d\n", trial_num, black, white);
+    }
 
     send_udp_response(response, client_addr, client_addr_len, udp_socket);
+}
+
+int check_try_err(const char *request, int n_args, char *aux_guess, int *trial_num) {
+    if (n_args != 3) {
+        return -1;
+    }
+
+    aux_guess[2*MAX_COLORS-1] = '\0';
+
+    if (strlen(aux_guess) != 2*MAX_COLORS-1) {
+        return -1;
+    }
+    for (int i = 0; i < 2*MAX_COLORS; i += 2) {
+        if (strchr(COLOR_OPTIONS, aux_guess[i]) == NULL) {
+            return -1;
+        }
+        if (aux_guess[i+1] != ' ' && aux_guess[i+1] != '\0') {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int check_try_nok(const char *plid, Player *player) {
+    if (!player || !player->is_playing) {
+        return -1;
+    }
+    return 0;
+}
+
+int check_try_etm(Player *player, char* response) {
+    if (time(&player->current_game->last_time) - player->current_game->start_time > player->current_game->max_time) {
+        char temp[2*MAX_COLORS];
+        convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
+        printf("[DEBUG] temp: %s\n", temp);
+        snprintf(response, BUFFER_SIZE, "RTR ENT -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
+        player->current_game->end_status = 'T';
+        return -1;
+    }
+    return 0;
+}
+
+int check_try_inv(Player *player, int trial_num, char *guess) {
+    if (player->current_game->trial_count == trial_num + 1) {
+        // pode ser Invalid, o jogo estar um à frente do suposto
+        Trials *aux = malloc(sizeof(Trials));
+        strcpy(aux->guess, guess);
+        if (player->current_game->trial != NULL) {
+            if (strcmp(player->current_game->trial->guess, guess) != 0) {
+                return -1;
+            }
+            else {
+                player->current_game->trial_count--;
+                return 1;
+            }
+        }
+        else {
+            free(aux);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int check_try_dup(Player *player, char *guess) {
+    for (Trials *trial = player->current_game->trial; trial != NULL; trial = trial->prev) {
+        printf("[DEBUG] trial->guess: %s\n", trial->guess);
+        printf("[DEBUG] guess: %s\n", guess);
+        if (strcmp(trial->guess, guess) == 0) {
+            player->current_game->trial_count--;
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int check_try_ent(Player *player, char* response) {
+    if (player->current_game->trial_count > MAX_TRIALS) {
+        char temp[2*MAX_COLORS];
+        convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
+        printf("[DEBUG] temp: %s\n", temp);
+        snprintf(response, BUFFER_SIZE, "RTR ENT -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
+        player->current_game->end_status = 'F';
+        end_game(player);
+        return -1;
+    }
+    return 0;
 }
 
 int calculate_feedback(const char *guess, const char *secret, int *black, int *white) {
@@ -162,4 +203,35 @@ int calculate_feedback(const char *guess, const char *secret, int *black, int *w
     }
 
     return 0; // Success
+}
+
+void create_trial(Player *player, char *guess, int black, int white) {
+    Trials *trial = malloc(sizeof(Trials)); //TODO: check if malloc fails
+    memset(trial->guess, 0, sizeof(trial->guess));
+    strncpy(trial->guess, guess, MAX_COLORS);
+    trial->black = black;
+    trial->white = white;
+    trial->prev = player->current_game->trial;
+    player->current_game->trial = trial;
+}
+
+int write_try_to_file(Player *player, char *guess, int black, int white) {
+    create_trial(player, guess, black, white);
+    FILE *fp = fopen(player->current_game->filename, "a");
+    if (!fp) {
+        perror("Error opening file");
+        return -1;
+    }
+    char buffer[128];
+    memset(buffer, 0, sizeof(buffer));
+    snprintf(buffer, sizeof(buffer), "%d: %s %d %d %ld\n",
+            player->current_game->trial_count, guess, black, white, player->current_game->last_time - player->current_game->start_time);
+    if (fwrite(buffer, 1, strlen(buffer), fp) != strlen(buffer)) {
+        perror("Error writing to file");
+        fclose(fp);
+        return -1;
+    }
+    fclose(fp);
+    return 0;
+
 }

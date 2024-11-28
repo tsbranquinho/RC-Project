@@ -1,6 +1,6 @@
 -> Para correres faz make nesta pasta
 -> Depois faz make run-server ou make run-client
--> Também podes ir a cada página individual e fazer make e make run
+-> Também podes ir a cada página individual e fazer make e make run, por enquanto não faças a partir do build
 -> Isto pode ser mudado, mas por enquanto também está temporário porque quero silenciar todos os makes
 
 //duvidas
@@ -10,6 +10,7 @@ documento stor
 não consigo fazer de server para o pc do rafa
 se o server mandar merda, o client deve dar display do que o server enviou
 dup deve verificar primeiro que ent
+CORRIGIR DINAMICIDADE DAS PASTAS OU ALTERAR SÓ O SÍTIO DA BUILD
 
 fazer dicas (tipo dizer o sitio da peça msm) acrescentar um menu de HELP no player 
 n = recvfrom para dar tamanho correto
