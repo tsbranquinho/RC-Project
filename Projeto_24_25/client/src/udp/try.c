@@ -9,7 +9,7 @@ int handle_try(const char *input) {
         return invalid_command_format(CMD_TRY);
     }
     try_code(code);
-    return FALSE;
+    return TRUE;
 }
 
 void try_code(const char *code) {
@@ -27,8 +27,6 @@ void try_code(const char *code) {
     }
 
     for (int i = 0; i < 2*MAX_COLORS; i += 2) {
-        printf("trimmed_code[%d]: %c\n", i, trimmed_code[i]);
-        printf("trimmed_code[%d]: %c\n", i+1, trimmed_code[i+1]);
         if (strchr(COLOR_OPTIONS, trimmed_code[i]) == NULL) {
             return invalid_code(COLOR);
         }
@@ -54,7 +52,7 @@ void try_code(const char *code) {
 }
 
 void receive_try_msg(const char *response) {
-    char status[BUFFER_SIZE];
+    char status[MAX_STATUS_SIZE];
     int black = 0, white = 0;
     char code[2 * MAX_COLORS];
     int tries;
@@ -64,7 +62,6 @@ void receive_try_msg(const char *response) {
     if (sscanf(response, "RTR %s %d %d %d %[^\n]", status, &tries, &black, &white, code) < 1) {
         return error_communicating_with_server(response);
     }
-    code[2*MAX_COLORS] = '\0';
     printf("check\n");
     printf("status: %s\n", status);
 
@@ -77,13 +74,16 @@ void receive_try_msg(const char *response) {
 
         if (black == MAX_COLORS) {
             printf("Congratulations! You've cracked the secret code.\n");
+            end_game();
         }
     } else if (strcmp(status, "DUP") == 0) {
         printf("Duplicate code entered. Try a different combination.\n");
     } else if (strcmp(status, "ENT") == 0) {
         printf("No more attempts left. You lose! The secret code was: %s\n", code);
+        end_game();
     } else if (strcmp(status, "ETM") == 0) {
         printf("Time limit exceeded. You lose! The secret code was: %s\n", code);
+        end_game();
     } else if (strcmp(status, "INV") == 0) {
         printf("Invalid trial format or sequence.\n");
     } else if (strcmp(status, "NOK") == 0) {

@@ -31,7 +31,7 @@ int handle_command(Command cmd, const char* input) {
         case CMD_EXIT: 
             return_value = handle_exit(input);
             if (return_value == EXIT_COMMAND) {
-                return TRUE;
+                return EXIT_COMMAND;
             }
             break;
         

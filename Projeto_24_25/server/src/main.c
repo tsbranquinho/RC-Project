@@ -4,17 +4,13 @@
 
 Player *hash_table[MAX_PLAYERS] = {NULL};
 
-void usage(const char *progname) {
-    fprintf(stderr, "Usage: %s [-p GSport] [-v]\n", progname);
-    fprintf(stderr, "  -p GSport  Specify the port number (only one) of the game server (optional).\n");
-    fprintf(stderr, "  -v         Enable verbose mode (optional).\n");
-}
-
 int main(int argc, char *argv[]) {
     int GSport = DEFAULT_PORT;
     int verbose_mode = 0;
     int port_set = 0;
     int opt;
+    signal(SIGINT, sig_detected);
+
 
     while ((opt = getopt(argc, argv, "p:v")) != -1) {
         switch (opt) {

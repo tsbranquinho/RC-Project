@@ -16,6 +16,7 @@
 #define TRUE 1
 #define EXIT_COMMAND 2
 #define EMPTY " "
+#define MAX_STATUS_SIZE 4
 
 int is_number(const char *str);
 int color_to_index(char color);

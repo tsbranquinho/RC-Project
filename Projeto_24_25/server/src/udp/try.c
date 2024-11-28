@@ -41,10 +41,20 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         send_udp_response("RTR NOK\n", client_addr, client_addr_len, udp_socket);
         return;
     }
-
-
+    
     int black = 0, white = 0;
     char response[BUFFER_SIZE];
+    time_t current_time;
+
+    if (time(&current_time) - player->current_game->start_time > player->current_game->max_time) {
+        char temp[2*MAX_COLORS];
+        convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
+        printf("[DEBUG] temp: %s\n", temp);
+        snprintf(response, sizeof(response), "RTR ETM -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
+        send_udp_response(response, client_addr, client_addr_len, udp_socket);
+        end_game(player);
+        return;
+    }
 
     if (player->current_game->trial_count == trial_num + 1) {
         // pode ser Invalid, o jogo estar um à frente do suposto
@@ -83,17 +93,7 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         printf("[DEBUG] temp: %s\n", temp);
         snprintf(response, sizeof(response), "RTR ENT -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
-        player->current_game->trial_count--;
-        return;
-    }
-
-    if (time(NULL) - player->current_game->start_time > player->current_game->max_time) {
-        char temp[2*MAX_COLORS];
-        convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
-        printf("[DEBUG] temp: %s\n", temp);
-        snprintf(response, sizeof(response), "RTR ETM -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
-        send_udp_response(response, client_addr, client_addr_len, udp_socket);
-        player->current_game->trial_count--;
+        end_game(player);
         return;
     }
 
@@ -114,6 +114,19 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     trial->white = white;
     trial->prev = player->current_game->trial;
     player->current_game->trial = trial;
+
+    FILE *fp = fopen(player->current_game->filename, "a");
+    if (!fp) {
+        perror("Error opening file");
+        send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
+        return;
+    }
+    char buffer[128];
+    memset(buffer, 0, sizeof(buffer));
+    snprintf(buffer, sizeof(buffer), "%d: %s %d %d %ld\n",
+            trial_num, guess, black, white, current_time);
+    fwrite(buffer, 1, strlen(buffer), fp);
+    fclose(fp);
 
     send_udp_response(response, client_addr, client_addr_len, udp_socket);
 }

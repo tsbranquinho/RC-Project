@@ -11,6 +11,7 @@
         "prototypes.h": "c",
         "globals.h": "c",
         "constants.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "common.h": "c"
     }
 }

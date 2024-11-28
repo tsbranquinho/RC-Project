@@ -13,6 +13,8 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
 int calculate_feedback(const char *guess, const char *secret, int *black, int *white);
 //quit.c
 void handle_quit_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
+void end_game(Player *player);
+//debug.c
 void handle_debug_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
 //player.c
 Player *create_player(const char *plid);
@@ -20,5 +22,7 @@ Player *find_player(const char *plid);
 void remove_player(const char *plid);
 unsigned int hash(const char *plid);
 void insert_player(Player *player);
+//error.c
+void sig_detected(int sig);
 
 #endif

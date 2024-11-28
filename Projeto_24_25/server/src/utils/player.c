@@ -1,6 +1,6 @@
-#include "../include/constants.h"
-#include "../include/prototypes.h"
-#include "../include/globals.h"
+#include "../../include/constants.h"
+#include "../../include/prototypes.h"
+#include "../../include/globals.h"
 
 Player *find_player(const char *plid) {
     unsigned int index = hash(plid);

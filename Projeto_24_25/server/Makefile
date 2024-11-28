@@ -7,7 +7,7 @@ TCP_DIR = $(SRC_DIR)/tcp
 UDP_DIR = $(SRC_DIR)/udp
 UTILS_DIR = $(SRC_DIR)/utils
 
-SRCS = $(SRC_DIR)/main.c $(SRC_DIR)/player.c \
+SRCS = $(SRC_DIR)/main.c \
        $(wildcard $(TCP_DIR)/*.c) \
        $(wildcard $(UDP_DIR)/*.c) \
 	   $(wildcard $(UTILS_DIR)/*.c) \
