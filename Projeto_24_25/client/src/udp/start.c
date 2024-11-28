@@ -2,15 +2,29 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
+int handle_start(const char *input) {
+    char plid[MAX_COMMAND_SIZE];
+    memset(plid, 0, sizeof(plid));
+    int time;
+    if (sscanf(input, "start %s %d", plid, &time) != 2 ) {
+        return invalid_command_format(CMD_START);
+    }
+
+    if(errorCurrentPlayer(plid)){
+        return TRUE;
+    }
+
+    start_game(plid, time);
+    return TRUE;
+}
+
 void start_game(const char *plid, unsigned int time) {
 
     if (strlen(plid) != ID_SIZE || !is_number(plid)) {
-        fprintf(stderr, "Invalid player ID, must be 6 numerical digits.\n");
-        return;
+        return invalid_player_id(plid);
     }
     if (time < 0 || time > MAX_PLAYTIME) {
-        fprintf(stderr, "Invalid playtime, must be between 0 and 600 seconds.\n");
-        return;
+        return invalid_playtime(time);
     }
 
     char message[BUFFER_SIZE];
@@ -22,8 +36,7 @@ void start_game(const char *plid, unsigned int time) {
     printf("[DEBUG] Sending start game request: %s", message); // Debug log
 
     if (send_udp_skt(message, response, sizeof(response), GSIP, GSport) < 0) {
-        fprintf(stderr, "Error communicating with the server.\n");
-        return;
+        return error_communicating_with_server(EMPTY);
     }
 
     printf("[DEBUG] Received response: %s", response); // Debug log
@@ -34,8 +47,7 @@ void receive_start_msg(const char *response, const char *plid) {
     char status[BUFFER_SIZE];
     memset(status, 0, sizeof(status));
     if (sscanf(response, "RSG %s", status) != 1) {
-        fprintf(stderr, "Invalid response from server: %s\n", response);
-        return;
+        return error_communicating_with_server(response);
     }
 
     if (strcmp(status, "OK") == 0) {
@@ -48,6 +60,6 @@ void receive_start_msg(const char *response, const char *plid) {
     } else if (strcmp(status, "ERR") == 0) {
         printf("Error starting game. Please check your inputs or try again later.\n");
     } else {
-        fprintf(stderr, "Unexpected server response: %s\n", status);
+        return error_communicating_with_server(response);
     }
 }

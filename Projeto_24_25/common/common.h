@@ -12,6 +12,10 @@
 #define COLOR_OPTIONS "RGBYOP"      // Possible colors
 #define SECRET_TO_CODE 0
 #define CODE_TO_SECRET 1
+#define FALSE 0
+#define TRUE 1
+#define EXIT_COMMAND 2
+#define EMPTY " "
 
 int is_number(const char *str);
 int color_to_index(char color);

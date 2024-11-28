@@ -2,24 +2,26 @@ CC = gcc
 CFLAGS = -Wall -g -Iinclude
 BUILD_DIR = build
 SRC_DIR = src
-UTILS_DIR = ../utils
+COMMON_DIR = ../common
 TCP_DIR = $(SRC_DIR)/tcp
 UDP_DIR = $(SRC_DIR)/udp
+UTILS_DIR = $(SRC_DIR)/utils
 
 SRCS = $(SRC_DIR)/main.c \
        $(wildcard $(TCP_DIR)/*.c) \
        $(wildcard $(UDP_DIR)/*.c) \
-       $(UTILS_DIR)/common.c
+	   $(wildcard $(UTILS_DIR)/*.c) \
+       $(COMMON_DIR)/common.c
 OBJS = $(SRCS:.c=.o)
 
 # Final executable
-EXEC = $(BUILD_DIR)/client
+EXEC = $(BUILD_DIR)/player
 
 all: $(EXEC) 
 	@echo "Client build complete!"
 
 $(EXEC): $(OBJS)
-	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/client $(OBJS)
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/player $(OBJS)
 
 run: $(EXEC)
 	@$(EXEC) $(ARGS)
@@ -28,5 +30,5 @@ run: $(EXEC)
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	@rm -f $(OBJS) $(EXEC) $(UTILS_DIR)/common.o *.o
+	@rm -f $(OBJS) $(EXEC) $(COMMON_DIR)/common.o *.o
 	@echo "Client clean complete!"

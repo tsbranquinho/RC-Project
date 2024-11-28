@@ -11,7 +11,7 @@
 #include <sys/types.h>  // For data types
 #include <netinet/in.h>  // For sockaddr_in
 #include <time.h>  // For time functions
-#include "../../utils/common.h"
+#include "../../common/common.h"
 
 
 #define MAX_PORT 65535

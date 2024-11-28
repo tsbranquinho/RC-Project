@@ -14,7 +14,7 @@
 #include <signal.h>
 #include <time.h>
 #include <sys/time.h>
-#include "../../utils/common.h"
+#include "../../common/common.h"
 
 #define MAX_PORT 65535              // Maximum port number
 #define BUFFER_SIZE 64              // Buffer size for messages
@@ -24,6 +24,9 @@
 #define MAX_COMMAND_SIZE 1024       // Symbolic constant for the maximum command size, way bigger than needed
 #define TIME_SIZE 3                 // Size of the time
 #define START_MSG_SIZE 15           // Size of the start message (4 (SNG + space) + 6 (PLID) + 1 (space) + 3 (TIME) + 1 (newline))
+#define LENGTH -1                   // For error checking
+#define COLOR -2                    // For error checking
+#define SPACE -3                    // For error checking
 
 typedef enum {
     CMD_START,

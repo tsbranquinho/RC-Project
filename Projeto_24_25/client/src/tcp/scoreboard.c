@@ -2,6 +2,20 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
+int handle_show_scoreboard(const char *input) {
+    if (strcmp(input, "sb") != 0 || strcmp(input, "scoreboard") != 0) {
+        return invalid_command_format(CMD_SCOREBOARD);
+    }
+    int sockfd = connect_to_server(&res);
+    if (sockfd < 0) return TRUE;
+
+    send_show_scoreboard_msg(sockfd);
+
+    close(sockfd);
+    freeaddrinfo(res);
+    return TRUE;
+}
+
 void send_show_scoreboard_msg(int fd) {
     char message[BUFFER_SIZE];
     snprintf(message, sizeof(message), "SSB\n");

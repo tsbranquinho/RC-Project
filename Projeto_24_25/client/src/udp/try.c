@@ -2,6 +2,16 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
+int handle_try(const char *input) {
+    char code[8];
+    memset(code, 0, sizeof(code));
+    if (sscanf(input, "try %[^\n]", code) != 1) {
+        return invalid_command_format(CMD_TRY);
+    }
+    try_code(code);
+    return FALSE;
+}
+
 void try_code(const char *code) {
     char trimmed_code[2*MAX_COLORS];
     printf("Code: %s\n", code);
@@ -9,25 +19,21 @@ void try_code(const char *code) {
     snprintf(trimmed_code, sizeof(trimmed_code), "%s", code);
     trimmed_code[2*MAX_COLORS-1] = '\0';
     if (currPlayer == 0) {
-        printf("No game started. Please start a game before trying a code.\n");
-        return;
+        return error_no_game(CMD_TRY);
     }
 
     if (strlen(trimmed_code) != 2*MAX_COLORS - 1) {
-        fprintf(stderr, "Invalid code length. It must be exactly 7 characters.\n");
-        return;
+        return invalid_code(LENGTH);
     }
 
     for (int i = 0; i < 2*MAX_COLORS; i += 2) {
         printf("trimmed_code[%d]: %c\n", i, trimmed_code[i]);
         printf("trimmed_code[%d]: %c\n", i+1, trimmed_code[i+1]);
         if (strchr(COLOR_OPTIONS, trimmed_code[i]) == NULL) {
-            fprintf(stderr, "Invalid color code. Use only R, G, B, Y, O, or P.\n");
-            return;
+            return invalid_code(COLOR);
         }
         if (trimmed_code[i+1] != ' ' && trimmed_code[i+1] != '\0') {
-            fprintf(stderr, "Invalid code format. Use spacing.\n");
-            return;
+            return invalid_code(SPACE);
         }
     }
 
@@ -40,8 +46,7 @@ void try_code(const char *code) {
     printf("[DEBUG] Sending try request: %s", message);
 
     if (send_udp_skt(message, response, sizeof(response), GSIP, GSport) < 0) {
-        fprintf(stderr, "Error communicating with the server.\n");
-        return;
+        return error_communicating_with_server(EMPTY);
     }
 
     printf("[DEBUG] Received response: %s", response);
@@ -57,8 +62,7 @@ void receive_try_msg(const char *response) {
     memset(code, 0, sizeof(code));
 
     if (sscanf(response, "RTR %s %d %d %d %[^\n]", status, &tries, &black, &white, code) < 1) {
-        fprintf(stderr, "Invalid response from server: %s\n", response);
-        return;
+        return error_communicating_with_server(response);
     }
     code[2*MAX_COLORS] = '\0';
     printf("check\n");
@@ -87,6 +91,6 @@ void receive_try_msg(const char *response) {
     } else if (strcmp(status, "ERR") == 0) {
         printf("Error trying code. Please verify inputs or try again later.\n");
     } else {
-        fprintf(stderr, "Unexpected server response: %s\n", status);
+        return error_communicating_with_server(response);
     }
 }

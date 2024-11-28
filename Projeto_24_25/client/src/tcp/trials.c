@@ -2,6 +2,20 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
+int handle_show_trials(const char *input) {
+    if (strcmp(input, "st") != 0 || strcmp(input, "show_trials") != 0) {
+        return invalid_command_format(CMD_SHOW_TRIALS);
+    }
+    int sockfd = connect_to_server(&res);
+    if (sockfd < 0) return TRUE;
+
+    send_show_trials_msg(sockfd);
+
+    close(sockfd);
+    freeaddrinfo(res);
+    return TRUE;
+}
+
 void send_show_trials_msg(int fd) {
     char message[BUFFER_SIZE];
     snprintf(message, sizeof(message), "STR %d\n", currPlayer);

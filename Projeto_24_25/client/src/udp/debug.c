@@ -2,26 +2,44 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
+int handle_debug(const char *input) {
+    char plid[7];
+    unsigned int max_playtime;
+    char code[2*MAX_COLORS];
+    memset(plid, 0, sizeof(plid));
+    memset(code, 0, sizeof(code));
+
+    if (sscanf(input, "debug %s %u %s", plid, &max_playtime, code) != 3) {
+        return invalid_command_format(CMD_DEBUG);
+    }
+
+    if(errorCurrentPlayer(plid)){
+        return TRUE;
+    }
+
+    debug_game(plid, max_playtime, code);
+    return TRUE;
+}
+
 void debug_game(const char *plid, unsigned int time, const char *code) {
     if (strlen(plid) != ID_SIZE || !is_number(plid)) {
-        fprintf(stderr, "Invalid player ID. It must be 6 numerical digits.\n");
-        return;
+        return invalid_player_id(plid);
     }
 
     if (time < 0 || time > MAX_PLAYTIME) {
-        fprintf(stderr, "Invalid playtime. It must be between 0 and 600 seconds.\n");
-        return;
+        return invalid_playtime(time);
     }
 
-    if (strlen(code) != MAX_COLORS) {
-        fprintf(stderr, "Invalid code length. It must be exactly 4 characters.\n");
-        return;
+    if (strlen(code) != 2*MAX_COLORS-1) {
+        return invalid_code(LENGTH);
     }
 
     for (int i = 0; i < MAX_COLORS; i++) {
-        if (strchr(COLOR_OPTIONS, code[i]) == NULL) {
-            fprintf(stderr, "Invalid color code. Use only R, G, B, Y, O, or P.\n");
-            return;
+        if (strchr(COLOR_OPTIONS, code[2*i]) == NULL) {
+            return invalid_code(COLOR);
+        }
+        if (code[2*i+1] != ' ' && code[2*i+1] != '\0') {
+            return invalid_code(SPACE);
         }
     }
 
@@ -33,8 +51,7 @@ void debug_game(const char *plid, unsigned int time, const char *code) {
     printf("[DEBUG] Sending debug game request: %s", message);
 
     if (send_udp_skt(message, response, sizeof(response), GSIP, GSport) < 0) {
-        fprintf(stderr, "Error communicating with the server.\n");
-        return;
+        return error_communicating_with_server(EMPTY);
     }
 
     printf("[DEBUG] Received response: %s", response);
@@ -46,8 +63,7 @@ void receive_debug_msg(const char *plid, const char *response) {
     memset(status, 0, sizeof(status));
 
     if (sscanf(response, "RDB %s", status) != 1) {
-        fprintf(stderr, "Invalid response from server: %s\n", response);
-        return;
+        return error_communicating_with_server(response);
     }
     if (strcmp(status, "OK") == 0) {
         printf("Debug game started successfully! You can begin playing.\n");
@@ -59,6 +75,6 @@ void receive_debug_msg(const char *plid, const char *response) {
     } else if (strcmp(status, "ERR") == 0) {
         printf("Error starting debug game. Please check your inputs or try again later.\n");
     } else {
-        fprintf(stderr, "Unexpected server response: %s\n", status);
+        return error_communicating_with_server(response);
     }
 }
