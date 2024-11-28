@@ -3,6 +3,6 @@
 
 #include "constants.h"
 
-Player *hash_table[MAX_PLAYERS];
+extern Player *hash_table[MAX_PLAYERS];
 
 #endif
