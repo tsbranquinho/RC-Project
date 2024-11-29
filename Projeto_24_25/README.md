@@ -16,5 +16,7 @@ fazer dicas (tipo dizer o sitio da peça msm) acrescentar um menu de HELP no pla
 n = recvfrom para dar tamanho correto
 falta sair do jogo quando dá etm ou ent
 seguir o guia do time 
+Se cliente receber mensagens mal formatadas: temina interação com o servidor e informa o utilizador imprimindo uma mensagem de erro no écran.
+
 
 podemos testar com o servidor daqui

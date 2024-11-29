@@ -77,6 +77,7 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         //TODO: fechar o jogo e limpar do lado do servidor
         snprintf(response, sizeof(response), "RTR OK %d 4 0\n", trial_num);
         player->current_game->end_status = 'W';
+        score_game(player);
         end_game(player);
     } else {
         snprintf(response, sizeof(response), "RTR OK %d %d %d\n", trial_num, black, white);

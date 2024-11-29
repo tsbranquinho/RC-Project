@@ -77,3 +77,48 @@ int end_game(Player *player) {
     player->current_game = NULL;
     return 0;
 }
+
+int score_game(Player *player) {
+    int score = 1000; //TODO descobrir como calcular o score, vou inventar um bocado
+    score -= (player->current_game->trial_count - 1) * 100;
+    score -= (player->current_game->last_time - player->current_game->start_time) / 3;
+    if (score < 1) {
+        score = 1;
+    }
+    if (score > 999) {
+        score = 999;
+    }
+
+
+    struct tm *current_time = gmtime(&player->current_game->last_time);
+    char mode[6];
+    memset(mode, 0, sizeof(mode));
+    if (player->current_game->mode == DEBUG) {
+        strncpy(mode, "DEBUG", sizeof(mode));
+    }
+    else {
+        strncpy(mode, "PLAY", sizeof(mode));
+    }
+
+    char filename[128];
+    memset(filename, 0, sizeof(filename));
+    snprintf(filename, sizeof(filename), "SCORES/%03d_%s_%02d%02d%04d_%02d%02d%02d.txt", 
+        score, player->plid, current_time->tm_mday, current_time->tm_mon + 1, current_time->tm_year + 1900,
+        current_time->tm_hour, current_time->tm_min, current_time->tm_sec);
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        perror("fopen");
+        return -1;
+    }
+    char buffer[128];
+    memset(buffer, 0, sizeof(buffer));
+    snprintf(buffer, sizeof(buffer), "%03d %s %s %d %s\n",
+        score, player->plid, player->current_game->secret_key, player->current_game->trial_count, mode);
+    if (fwrite(buffer, 1, strlen(buffer), file) != strlen(buffer)) {
+        perror("fwrite");
+        fclose(file);
+        return -1;
+    }
+    fclose(file);
+    return 0;
+}

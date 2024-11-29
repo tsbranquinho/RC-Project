@@ -29,7 +29,9 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
     player->current_game->trial_count = 0;
     player->current_game->max_time = max_time;
     player->current_game->trial = NULL;
+    player->current_game->mode = DEBUG;
     strncpy(player->current_game->secret_key, key, MAX_COLORS);
 
+    //TODO create file
     send_udp_response("RDB OK\n", client_addr, client_addr_len, udp_socket);
 }

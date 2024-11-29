@@ -22,6 +22,8 @@
 #define BUFFER_SIZE 128
 //GAME_XXXXXX.txt
 #define GAME_FILE_NAME_SIZE 16 
+#define DEBUG 1
+#define PLAY 2
 
 typedef struct Trials {
     char guess[MAX_COLORS + 1];
@@ -33,6 +35,7 @@ typedef struct Trials {
 typedef struct Game {
     char secret_key[MAX_COLORS + 1];
     int trial_count;
+    int mode;
     Trials *trial;
     time_t start_time;
     time_t last_time;

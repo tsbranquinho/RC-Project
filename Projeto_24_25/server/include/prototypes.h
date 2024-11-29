@@ -22,6 +22,7 @@ int write_try_to_file(Player *player, char *guess, int black, int white);
 //quit.c
 void handle_quit_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
 int end_game(Player *player);
+int score_game(Player *player);
 //debug.c
 void handle_debug_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
 //player.c

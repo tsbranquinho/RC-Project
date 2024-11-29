@@ -30,6 +30,7 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
     player->current_game->max_time = max_time;
     generate_random_key(player->current_game->secret_key);
     player->current_game->trial = NULL;
+    player->current_game->mode = PLAY;
     //GAME_XXXXXX.txt
     char filename[GAME_FILE_NAME_SIZE+6]; // 6 for "GAMES/"
     snprintf(filename, sizeof(filename), "GAMES/GAME_%s.txt", plid);
