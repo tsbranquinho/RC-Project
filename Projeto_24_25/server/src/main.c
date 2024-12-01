@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    /* TODO TCP após udp e paralelização
+     TODO TCP após udp e paralelização
     // Bind TCP socket
     if (bind(tcp_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("TCP socket bind failed");
@@ -83,6 +83,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    /*
     // Start listening for TCP connections
     if (listen(tcp_socket, 5) < 0) {
         perror("TCP socket listen failed");
@@ -98,33 +99,110 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in client_addr;  // Client address structure
     socklen_t client_addr_len = sizeof(client_addr);
 
-    while (1) {
-        memset(buffer, 0, sizeof(buffer));
-        ssize_t recv_len = recvfrom(udp_socket, buffer, sizeof(buffer) - 1, 0,
-                                    (struct sockaddr *)&client_addr, &client_addr_len);
-        if (recv_len < 0) {
-            perror("Failed to receive UDP message");
-            continue;
-        }
+    pid_t pid;
+    pid = fork();
+    if (pid < 0) {
+        perror("Failed to fork");
+        return EXIT_FAILURE;
+    }
 
-        buffer[recv_len] = '\0';
-        if (verbose_mode) { //TODO isto nao chega
-            char client_ip[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
-            printf("Received message from %s:%d\n", client_ip, ntohs(client_addr.sin_port));
-            printf("Message: %s\n", buffer);
-        }
+    if (pid == 0) {
+        //UDP_SERVER
 
-        if (strncmp(buffer, "SNG", 3) == 0) {
-            handle_start_request(buffer, &client_addr, client_addr_len, udp_socket);
-        } else if (strncmp(buffer, "TRY", 3) == 0) {
-            handle_try_request(buffer, &client_addr, client_addr_len, udp_socket);
-        } else if (strncmp(buffer, "QUT", 3) == 0) {
-            handle_quit_request(buffer, &client_addr, client_addr_len, udp_socket);
-        } else if (strncmp(buffer, "DBG", 3) == 0) {
-            handle_debug_request(buffer, &client_addr, client_addr_len, udp_socket);
-        } else {
-            send_udp_response("ERR\n", &client_addr, client_addr_len, udp_socket);
+        while (1) {
+            memset(buffer, 0, sizeof(buffer));
+            ssize_t recv_len = recvfrom(udp_socket, buffer, sizeof(buffer) - 1, 0,
+                                        (struct sockaddr *)&client_addr, &client_addr_len);
+            if (recv_len < 0) {
+                perror("Failed to receive UDP message");
+                continue;
+            }
+
+            buffer[recv_len] = '\0';
+            if (verbose_mode) { //TODO isto nao chega
+                char client_ip[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
+                printf("Received message from %s:%d\n", client_ip, ntohs(client_addr.sin_port));
+                printf("Message: %s\n", buffer);
+            }
+
+            if (strncmp(buffer, "SNG", 3) == 0) {
+                handle_start_request(buffer, &client_addr, client_addr_len, udp_socket);
+            } else if (strncmp(buffer, "TRY", 3) == 0) {
+                handle_try_request(buffer, &client_addr, client_addr_len, udp_socket);
+            } else if (strncmp(buffer, "QUT", 3) == 0) {
+                handle_quit_request(buffer, &client_addr, client_addr_len, udp_socket);
+            } else if (strncmp(buffer, "DBG", 3) == 0) {
+                handle_debug_request(buffer, &client_addr, client_addr_len, udp_socket);
+            } else {
+                send_udp_response("ERR\n", &client_addr, client_addr_len, udp_socket);
+            }
+        }
+    }
+    else {
+        while(1) {
+            //TCP SERVER
+            int client_socket;
+            struct sockaddr_in client_addr;
+            socklen_t client_addr_len = sizeof(client_addr);
+            if ((client_socket = accept(tcp_socket, (struct sockaddr *)&client_addr, &client_addr_len)) < 0) {
+                perror("Failed to accept TCP connection");
+                return EXIT_FAILURE;
+            }
+            struct timeval timeout;
+            timeout.tv_sec = 5;
+            timeout.tv_usec = 0;
+
+            if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+                fprintf(stderr, "ERROR: socket timeout creation was not sucessful\n");
+                close(client_socket);
+                exit_server(1);
+            }
+
+            pid_t pid;
+            pid = fork();
+            if (pid < 0) {
+                perror("Failed to fork");
+                return EXIT_FAILURE;
+            }
+            if (pid == 0) {
+
+                memset(buffer, 0, sizeof(buffer));
+                int n = read(client_socket, buffer, 4);
+                if (n < 0) {
+                    if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                        perror("Timeout");
+                        close(client_socket);
+                        exit(0);
+                    }
+                    perror("Failed to read from TCP socket");
+                    close(client_socket);
+                    exit(1);
+                }
+                buffer[n] = '\0';
+                if (verbose_mode) {
+                    char client_ip[INET_ADDRSTRLEN];
+                    inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
+                    printf("Received message from %s:%d\n", client_ip, ntohs(client_addr.sin_port));
+                    printf("Message: %s\n", buffer);
+                }
+                if (strcmp(buffer, "STR") == 0) {
+                    handle_trials_request(tcp_socket);
+                }
+                else if (strcmp(buffer, "SSB") == 0) {
+                    handle_scoreboard_request(tcp_socket);
+                }
+                else {
+                    //NOT SURE IF THIS IS THE RIGHT RESPONSE
+                    send_tcp_response("ERR\n", tcp_socket);
+                }
+                close(client_socket);
+                exit(0); //Kill the child process
+
+            }
+            else {
+                close(client_socket);
+            }
         }
     }
 
