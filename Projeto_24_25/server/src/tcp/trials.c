@@ -3,19 +3,23 @@
 #include "../../include/globals.h"
 
 void handle_trials_request(int tcp_socket) {
+
     printf("[DEBUG] Received TRIALS request\n");
     char buffer[4096];
     char plid[ID_SIZE + 1];
     memset(buffer, 0, sizeof(buffer));
     memset(plid, 0, sizeof(plid));
+
     int n = read_tcp_socket(tcp_socket, buffer, 8);
     buffer[n-1] = '\0';
     printf("[DEBUG] Received message: %s\n", buffer);
+
     if (sscanf(buffer, "%6s", plid) != 1) {
         //TODO send ERR
         send_tcp_response("ERR\n", tcp_socket);
         return;
     }
+
     plid[ID_SIZE] = '\0';
     printf("[DEBUG] Received TRIALS request from %s\n", plid);
     printf("plid: %s\n", plid);
@@ -26,6 +30,13 @@ void handle_trials_request(int tcp_socket) {
         send_tcp_response("NOK\n", tcp_socket);
         return;
     }
+
+    pthread_mutex_t *plid_mutex = mutex_plid(plid);
+    if (!plid_mutex) {
+        send_tcp_response("ERR\n", tcp_socket);
+        return;
+    }
+
     if (!player->is_playing) {
         //TODO send FIN e enviar os jogos mais recentes do player (função de ordenação no guia e no fim)
         //I truly have no idea if this is what it's supposed to do
@@ -35,15 +46,18 @@ void handle_trials_request(int tcp_socket) {
         else {
             send_tcp_response("FIN\n", tcp_socket);
         }
+        mutex_unlock(plid_mutex);
         return;
     }
 
     char filename[128];
     memset(filename, 0, sizeof(filename));
-    snprintf(filename, sizeof(filename), "GAMES/GAME_%s.txt", player->plid);   
+    snprintf(filename, sizeof(filename), "GAMES/GAME_%s.txt", player->plid);
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         perror("fopen");
+        send_tcp_response("ERR\n", tcp_socket); //TODO acho que é isto
+        mutex_unlock(plid_mutex);
         return;
     }
     char* tempfilename = strrchr(filename, '/');
@@ -59,8 +73,9 @@ void handle_trials_request(int tcp_socket) {
     }
     printf("buffer: %s\n", buffer);
     send_tcp_response(buffer, tcp_socket);
-
     fclose(file);
+
+    mutex_unlock(plid_mutex);
     //no fundo é enviar este ficheiro por TCP
 }
 

@@ -15,16 +15,19 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/select.h>
+#include <pthread.h>
 #include "../../common/common.h"
 
 
 #define MAX_PORT 65535
-#define MAX_PLAYERS 100
+#define MAX_PLAYERS 128
+#define MAX_LOCKS 128
 #define BUFFER_SIZE 128
 //GAME_XXXXXX.txt
-#define GAME_FILE_NAME_SIZE 16 
+#define GAME_FILE_NAME_SIZE 16
 #define DEBUG 1
 #define PLAY 2
+#define MAX_TASK_QUEUE 512
 
 typedef struct Trials {
     char guess[MAX_COLORS + 1];
@@ -52,5 +55,22 @@ typedef struct Player {
     struct Player *next;
     int fd;
 } Player;
+
+typedef struct {
+    int client_socket;
+    struct sockaddr_in client_addr;
+    socklen_t addr_len;
+    int is_tcp;
+    char buffer[1024];
+} Task;
+
+typedef struct {
+    Task tasks[MAX_TASK_QUEUE];
+    int front;
+    int rear;
+    int count;
+    pthread_mutex_t lock;
+    pthread_cond_t cond;
+} TaskQueue;
 
 #endif

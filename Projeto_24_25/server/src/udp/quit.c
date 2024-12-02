@@ -12,7 +12,14 @@ void handle_quit_request(const char *request, struct sockaddr_in *client_addr, s
 
     Player *player = find_player(plid);
     if (!player || !player->is_playing) {
+
         send_udp_response("RQT NOK\n", client_addr, client_addr_len, udp_socket);
+        return;
+    }
+
+    pthread_mutex_t *plid_mutex = mutex_plid(plid);
+    if (!plid_mutex) {
+        send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
         return;
     }
 
@@ -26,6 +33,7 @@ void handle_quit_request(const char *request, struct sockaddr_in *client_addr, s
         return;
     }
 
+    mutex_unlock(plid_mutex);
     send_udp_response(response, client_addr, client_addr_len, udp_socket);
 }
 

@@ -30,10 +30,13 @@ int score_game(Player *player);
 //debug.c
 void handle_debug_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
 //player.c
+pthread_mutex_t *get_plid_mutex(const char *plid);
+void cleanup_plid_mutex(const char *plid);
 Player *create_player(const char *plid);
 Player *find_player(const char *plid);
 void remove_player(const char *plid);
 unsigned int hash(const char *plid);
+unsigned int hash_lock(const char *plid);
 void insert_player(Player *player);
 //error.c
 void delete_directory_contents(const char *path);
@@ -41,6 +44,18 @@ void sig_detected(int sig);
 
 void handle_trials_request(int tcp_socket);
 int FindLastGame(char *PLID, char *filename);
+
+//TODO tirar threads da main
+
+pthread_mutex_t *mutex_plid(const char *plid);
+void mutex_unlock(pthread_mutex_t *plid_mutex);
+void handle_task(Task task);
+void *worker_thread(void *arg);
+void task_queue_init(TaskQueue *queue);
+void task_queue_push(TaskQueue *queue, Task task);
+Task task_queue_pop(TaskQueue *queue);
+void sig_detected(int signo);
+void usage(const char *progname);
 
 
 #endif

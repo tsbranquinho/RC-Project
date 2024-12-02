@@ -12,7 +12,7 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     if (check_try_err(request, n_args, aux_guess, &trial_num) < 0) {
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         return;
-    }	
+    }
 
     char guess[MAX_COLORS + 1];
     for (int i = 0; i < MAX_COLORS; i++) {
@@ -26,6 +26,13 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         send_udp_response("RTR NOK\n", client_addr, client_addr_len, udp_socket);
         return;
     }
+
+    pthread_mutex_t *plid_mutex = mutex_plid(plid);
+    if (!plid_mutex) {
+        send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
+        return;
+    }
+
     player->current_game->trial_count++;
     int black = 0, white = 0;
     char response[BUFFER_SIZE];
@@ -34,6 +41,7 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     if (check_try_etm(player, response) < 0) {
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
         end_game(player);
+        mutex_unlock(plid_mutex);
         return;
     }
 
@@ -42,34 +50,40 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     if (ret == -1) {
         send_udp_response("RTR INV\n", client_addr, client_addr_len, udp_socket);
         player->current_game->trial_count--;
+        mutex_unlock(plid_mutex);
         return;
     }
     else if (ret == 1) {
         snprintf(response, sizeof(response), "RTR OK %d %d %d\n", trial_num, player->current_game->trial->black, player->current_game->trial->white);
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
         player->current_game->trial_count--;
+        mutex_unlock(plid_mutex);
         return;
     }
 
     //DUP
     if (check_try_dup(player, guess) < 0) {
         send_udp_response("RTR DUP\n", client_addr, client_addr_len, udp_socket);
+        mutex_unlock(plid_mutex);
         return;
     }
 
     //ENT
     if (check_try_ent(player, response) < 0) {
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
+        mutex_unlock(plid_mutex);
         return;
     }
 
     if (calculate_feedback(guess, player->current_game->secret_key, &black, &white) < 0) {
         send_udp_response("RTR ERR\n \0", client_addr, client_addr_len, udp_socket);
+        mutex_unlock(plid_mutex);
         return;
     }
     
     if (write_try_to_file(player, guess, black, white) < 0) {
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
+        mutex_unlock(plid_mutex);
         return;
     }
 
@@ -84,6 +98,7 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     }
 
     send_udp_response(response, client_addr, client_addr_len, udp_socket);
+    mutex_unlock(plid_mutex);
 }
 
 int check_try_err(const char *request, int n_args, char *aux_guess, int *trial_num) {

@@ -14,13 +14,34 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
 
     Player *player = find_player(plid);
     if (player != NULL && player->is_playing) {
-        send_udp_response("RDB NOK\n", client_addr, client_addr_len, udp_socket);
+        
+        pthread_mutex_t *plid_mutex = mutex_plid(plid);
+        if (!plid_mutex) {
+            send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
+            return;
+        }
+
+        send_udp_response("RSG NOK\n", client_addr, client_addr_len, udp_socket);
+        
+        mutex_unlock(plid_mutex);
         return;
     }
 
+    
     if (player == NULL) {
         player = create_player(plid);
+        if (!player) {
+            fprintf(stderr, "Failed to create player %s\n", plid);
+            send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
+            return;
+        }
         insert_player(player);
+    }
+
+    pthread_mutex_t *plid_mutex = mutex_plid(plid);
+    if (!plid_mutex) {
+        send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
+        return;
     }
 
     player->is_playing = 1;
@@ -33,5 +54,7 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
     strncpy(player->current_game->secret_key, key, MAX_COLORS);
 
     //TODO create file
+
+    mutex_unlock(plid_mutex);
     send_udp_response("RDB OK\n", client_addr, client_addr_len, udp_socket);
 }
