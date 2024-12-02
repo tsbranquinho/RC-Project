@@ -3,7 +3,7 @@
 #include "../../include/globals.h"
 
 int handle_show_scoreboard(const char *input) {
-    if (strcmp(input, "sb") != 0 || strcmp(input, "scoreboard") != 0) {
+    if (strcmp(input, "sb") != 0 && strcmp(input, "scoreboard") != 0) {
         return invalid_command_format(CMD_SCOREBOARD);
     }
     int sockfd = connect_to_server(&res);

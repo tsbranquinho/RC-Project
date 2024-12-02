@@ -8,6 +8,7 @@ void usage(const char *progname);
 void send_udp_response(const char *message, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
 //tcp.c
 void send_tcp_response(const char *message, int tcp_socket);
+int read_tcp_socket(int fd, char *buffer, size_t size);
 //start.c
 void handle_start_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
 void generate_random_key(char *key);
@@ -37,5 +38,9 @@ void insert_player(Player *player);
 //error.c
 void delete_directory_contents(const char *path);
 void sig_detected(int sig);
+
+void handle_trials_request(int tcp_socket);
+int FindLastGame(char *PLID, char *filename);
+
 
 #endif

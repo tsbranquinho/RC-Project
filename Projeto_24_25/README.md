@@ -11,6 +11,8 @@ não consigo fazer de server para o pc do rafa
 se o server mandar merda, o client deve dar display do que o server enviou
 dup deve verificar primeiro que ent
 CORRIGIR DINAMICIDADE DAS PASTAS OU ALTERAR SÓ O SÍTIO DA BUILD
+PROBLEMAS COM EXIT NOK
+VER FORKS COM FILHOS INFINITOS
 
 fazer dicas (tipo dizer o sitio da peça msm) acrescentar um menu de HELP no player 
 n = recvfrom para dar tamanho correto

@@ -3,23 +3,26 @@
 #include "../../include/globals.h"
 
 void handle_trials_request(int tcp_socket) {
-    char buffer[BUFFER_SIZE];
+    printf("[DEBUG] Received TRIALS request\n");
+    char buffer[4096];
     char plid[ID_SIZE + 1];
-    int n = read(tcp_socket, buffer, BUFFER_SIZE);
-    if (n < 0) {
-        perror("Failed to read from TCP socket");
-        return;
-    }
-    buffer[n] = '\0';
-    if (sscanf(buffer, " %6s", plid) != 1) {
+    memset(buffer, 0, sizeof(buffer));
+    memset(plid, 0, sizeof(plid));
+    int n = read_tcp_socket(tcp_socket, buffer, 8);
+    buffer[n-1] = '\0';
+    printf("[DEBUG] Received message: %s\n", buffer);
+    if (sscanf(buffer, "%6s", plid) != 1) {
         //TODO send ERR
         send_tcp_response("ERR\n", tcp_socket);
         return;
     }
+    plid[ID_SIZE] = '\0';
     printf("[DEBUG] Received TRIALS request from %s\n", plid);
+    printf("plid: %s\n", plid);
     Player *player = find_player(plid);
     if (player == NULL) {
         //TODO send NOK
+        printf("Player not found\n");
         send_tcp_response("NOK\n", tcp_socket);
         return;
     }
@@ -37,16 +40,26 @@ void handle_trials_request(int tcp_socket) {
 
     char filename[128];
     memset(filename, 0, sizeof(filename));
-    snprintf(filename, sizeof(filename), "GAMES/GAME_%s.txt", player->plid);
+    snprintf(filename, sizeof(filename), "GAMES/GAME_%s.txt", player->plid);   
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         perror("fopen");
         return;
     }
-    send_tcp_response("OK\n", tcp_socket);
-    while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
-        send_tcp_response(buffer, tcp_socket);
+    char* tempfilename = strrchr(filename, '/');
+    tempfilename++;
+    memset(buffer, 0, sizeof(buffer));
+    int filesize = 0;
+    fseek(file, 0, SEEK_END);
+    filesize = ftell(file);
+    rewind(file);
+    snprintf(buffer, sizeof(buffer), "ACT RST %s %d\n", tempfilename, filesize);
+    while (fgets(buffer + strlen(buffer), filesize + 1, file) != NULL) {
+        continue;
     }
+    printf("buffer: %s\n", buffer);
+    send_tcp_response(buffer, tcp_socket);
+
     fclose(file);
     //no fundo é enviar este ficheiro por TCP
 }

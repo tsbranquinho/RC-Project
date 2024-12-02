@@ -53,12 +53,6 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    if ((tcp_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("TCP socket creation failed");
-        close(udp_socket);
-        return EXIT_FAILURE;
-    }
-
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
@@ -70,11 +64,21 @@ int main(int argc, char *argv[]) {
     if (bind(udp_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("UDP socket bind failed");
         close(udp_socket);
-        close(tcp_socket);
         return EXIT_FAILURE;
     }
 
-     TODO TCP após udp e paralelização
+    if ((tcp_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("TCP socket creation failed");
+        close(udp_socket);
+        return EXIT_FAILURE;
+    }
+
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(GSport);
+
+    //TODO TCP após udp e paralelização
     // Bind TCP socket
     if (bind(tcp_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("TCP socket bind failed");
@@ -83,7 +87,18 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    /*
+    printf("Game Server is up and running.\n");
+
+    char buffer[1024];  // Buffer to store incoming messages
+    struct sockaddr_in client_addr;  // Client address structure
+    socklen_t client_addr_len = sizeof(client_addr);
+
+    fd_set read_fds, temp_fds;
+    FD_ZERO(&read_fds);
+    int max_fd = udp_socket > tcp_socket ? udp_socket : tcp_socket;
+    FD_SET(udp_socket, &read_fds);
+    FD_SET(tcp_socket, &read_fds);
+
     // Start listening for TCP connections
     if (listen(tcp_socket, 5) < 0) {
         perror("TCP socket listen failed");
@@ -91,25 +106,20 @@ int main(int argc, char *argv[]) {
         close(tcp_socket);
         return EXIT_FAILURE;
     }
-    */
 
-    printf("Game Server is up and running.\n");
+    //TODO Implementar sistema de queues
 
-    char buffer[1024];  // Buffer to store incoming messages
-    struct sockaddr_in client_addr;  // Client address structure
-    socklen_t client_addr_len = sizeof(client_addr);
+    while (1) {
 
-    pid_t pid;
-    pid = fork();
-    if (pid < 0) {
-        perror("Failed to fork");
-        return EXIT_FAILURE;
-    }
+        temp_fds = read_fds;
 
-    if (pid == 0) {
-        //UDP_SERVER
+        if (select(max_fd + 1, &temp_fds, NULL, NULL, NULL) < 0) {
+            perror("Failed to select");
+            continue;
+        }
 
-        while (1) {
+        if (FD_ISSET(udp_socket, &temp_fds)) {
+
             memset(buffer, 0, sizeof(buffer));
             ssize_t recv_len = recvfrom(udp_socket, buffer, sizeof(buffer) - 1, 0,
                                         (struct sockaddr *)&client_addr, &client_addr_len);
@@ -138,37 +148,37 @@ int main(int argc, char *argv[]) {
                 send_udp_response("ERR\n", &client_addr, client_addr_len, udp_socket);
             }
         }
-    }
-    else {
-        while(1) {
+        if (FD_ISSET(tcp_socket, &temp_fds)) {
             //TCP SERVER
-            int client_socket;
-            struct sockaddr_in client_addr;
-            socklen_t client_addr_len = sizeof(client_addr);
-            if ((client_socket = accept(tcp_socket, (struct sockaddr *)&client_addr, &client_addr_len)) < 0) {
-                perror("Failed to accept TCP connection");
-                return EXIT_FAILURE;
-            }
-            struct timeval timeout;
-            timeout.tv_sec = 5;
-            timeout.tv_usec = 0;
-
-            if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-                fprintf(stderr, "ERROR: socket timeout creation was not sucessful\n");
-                close(client_socket);
-                exit_server(1);
-            }
-
+            printf("TCP connection received\n");
             pid_t pid;
             pid = fork();
             if (pid < 0) {
                 perror("Failed to fork");
-                return EXIT_FAILURE;
+                return EXIT_FAILURE; //TODO deal with this later
             }
             if (pid == 0) {
+                sleep(1);
+                int client_socket;
+                struct sockaddr_in client_addr;
+                socklen_t client_addr_len = sizeof(client_addr);
+                if ((client_socket = accept(tcp_socket, (struct sockaddr *)&client_addr, &client_addr_len)) < 0) {
+                    perror("Failed to accept TCP connection");
+                    return EXIT_FAILURE;
+                }
+                printf("Accepted TCP connection from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+                struct timeval timeout;
+                timeout.tv_sec = 5;
+                timeout.tv_usec = 0;
+
+                if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+                    fprintf(stderr, "ERROR: socket timeout creation was not sucessful\n");
+                    close(client_socket);
+                    exit(1);
+                }
 
                 memset(buffer, 0, sizeof(buffer));
-                int n = read(client_socket, buffer, 4);
+                int n = read_tcp_socket(client_socket, buffer, 4); 
                 if (n < 0) {
                     if (errno == EWOULDBLOCK || errno == EAGAIN) {
                         perror("Timeout");
@@ -179,7 +189,8 @@ int main(int argc, char *argv[]) {
                     close(client_socket);
                     exit(1);
                 }
-                buffer[n] = '\0';
+                buffer[n-1] = '\0';
+                printf("[DEBUG] Received message: %s\n", buffer);
                 if (verbose_mode) {
                     char client_ip[INET_ADDRSTRLEN];
                     inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
@@ -187,21 +198,18 @@ int main(int argc, char *argv[]) {
                     printf("Message: %s\n", buffer);
                 }
                 if (strcmp(buffer, "STR") == 0) {
-                    handle_trials_request(tcp_socket);
+                    handle_trials_request(client_socket);
                 }
                 else if (strcmp(buffer, "SSB") == 0) {
-                    handle_scoreboard_request(tcp_socket);
+                    //handle_scoreboard_request(client_socket);
                 }
                 else {
                     //NOT SURE IF THIS IS THE RIGHT RESPONSE
-                    send_tcp_response("ERR\n", tcp_socket);
+                    send_tcp_response("ERR\n", client_socket);
                 }
                 close(client_socket);
+                printf("Connection closed\n");
                 exit(0); //Kill the child process
-
-            }
-            else {
-                close(client_socket);
             }
         }
     }

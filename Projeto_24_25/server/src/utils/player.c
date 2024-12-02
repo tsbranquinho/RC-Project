@@ -3,15 +3,18 @@
 #include "../../include/globals.h"
 
 Player *find_player(const char *plid) {
+    printf("Finding player with ID %s\n", plid);
     unsigned int index = hash(plid);
     Player *current = hash_table[index];
 
     while (current != NULL) {
         if (strcmp(current->plid, plid) == 0) {
+            printf("Player with ID %s found\n", plid);
             return current;
         }
         current = current->next;
     }
+    printf("Player with ID %s not found\n", plid);
     return NULL;
 }
 

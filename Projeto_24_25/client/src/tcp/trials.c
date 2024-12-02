@@ -3,7 +3,7 @@
 #include "../../include/globals.h"
 
 int handle_show_trials(const char *input) {
-    if (strcmp(input, "st") != 0 || strcmp(input, "show_trials") != 0) {
+    if (strcmp(input, "st") != 0 && strcmp(input, "show_trials") != 0) {
         return invalid_command_format(CMD_SHOW_TRIALS);
     }
     int sockfd = connect_to_server(&res);
@@ -18,7 +18,7 @@ int handle_show_trials(const char *input) {
 
 void send_show_trials_msg(int fd) {
     char message[BUFFER_SIZE];
-    snprintf(message, sizeof(message), "STR %d\n", currPlayer);
+    snprintf(message, sizeof(message), "STR %s\n", plidCurr);
 
     if (send_tcp_message(fd, message) == -1) {
         fprintf(stderr, "ERROR: Failed to send 'show_trials' message\n");
@@ -28,40 +28,73 @@ void send_show_trials_msg(int fd) {
 }
 
 void receive_show_trials_msg(int fd) {
-    char response[BUFFER_SIZE * 10];
-    if (read_tcp_socket(fd, response, sizeof(response)) == -1) {
-        fprintf(stderr, "ERROR: Failed to receive 'show_trials' response\n");
-        return;
-    }
+    char response[4096];
+    char status[4];
 
-    char status[10], filename[1024]; //TODO not sure o tamanho que ponho
+    char filename[1024]; //TODO not sure o tamanho que ponho
     int file_size;
     char *file_data = NULL;
 
-    if (sscanf(response, "RST %s %s %d\n", status, filename, &file_size) >= 1) {
-        if (strcmp(status, "ACT") == 0 || strcmp(status, "FIN") == 0) {
-            file_data = strstr(response, "\n\n") + 2;
-            if (!file_data || strlen(file_data) != (size_t)file_size) {
-                fprintf(stderr, "Incomplete file data.\n");
-                return;
-            }
+    if (read_tcp_socket(fd, response, sizeof(response)) == -1) {
+        printf("ERROR: Failed to receive 'show_trials' response\n");
+        return;
+    }
 
-            FILE *fp = fopen(filename, "w");
-            if (!fp) {
-                perror("Error saving file");
-                return;
-            }
-            fwrite(file_data, 1, file_size, fp);
-            fclose(fp);
+    if (sscanf(response, "%s", status) != 1) {
+        printf("ERROR: Failed to parse 'show_trials' response\n");
+        return;
+    }
 
-            printf("Trials saved to '%s'.\n", filename);
-            printf("Game Summary:\n%s\n", file_data);
-        } else if (strcmp(status, "NOK") == 0) {
-            printf("No game data available for player '%d'.\n", currPlayer);
-        } else {
+    if (strcmp(status, "ACT") == 0 || strcmp(status, "FIN") == 0) {
+        if (sscanf(response + strlen(status) + 1, "RST %s %d\n", filename, &file_size) >= 1) {
+            printf("Filename: %s, File size: %d\n", filename, file_size);
+
+            // A parte após o '\n' no response contém os dados do arquivo
+            char *file_data_start = strchr(response, '\n');  // Procurar o primeiro '\n'
+            if (file_data_start != NULL) {
+                file_data_start++; // Mover para o próximo caractere após o '\n'
+
+                // Alocar memória para armazenar os dados do arquivo
+                file_data = malloc(file_size + 1); // +1 para o terminador nulo
+                if (!file_data) {
+                    printf("ERROR: Memory allocation failed\n");
+                    return;
+                }
+
+                // Copiar os dados do arquivo para o buffer
+                strncpy(file_data, file_data_start, file_size);
+                file_data[file_size] = '\0'; // Garantir que os dados do arquivo sejam uma string válida
+
+                // Agora podemos salvar o arquivo
+                FILE *fp = fopen(filename, "w");
+                if (!fp) {
+                    perror("Error saving file");
+                    free(file_data); // Liberar a memória
+                    return;
+                }
+
+                // Salvar os dados do arquivo
+                fwrite(file_data, 1, file_size, fp);
+                fclose(fp);
+
+                printf("Trials saved to '%s'.\n", filename);
+                printf("Game Summary:\n%s\n", file_data);
+
+                // Liberar a memória alocada para os dados do arquivo
+                free(file_data);
+            }
+            else {
+                printf("ERROR: Incomplete file data\n");
+            }
+        }
+        else {
             printf("Unexpected server response: %s\n", response);
         }
-    } else {
-        printf("Invalid response format.\n");
+    }
+    else if (strcmp(status, "NOK") == 0) {
+        printf("No game data available for player '%s'.\n", plidCurr);
+    }
+    else {
+        printf("Unexpected server response: %s\n", response);
     }
 }
