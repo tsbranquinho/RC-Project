@@ -85,6 +85,7 @@ void receive_try_msg(const char *response) {
         printf("Time limit exceeded. You lose! The secret code was: %s\n", code);
         end_game();
     } else if (strcmp(status, "INV") == 0) {
+        //TODO ponderar aumentar o trial number para dar match
         printf("Invalid trial format or sequence.\n");
     } else if (strcmp(status, "NOK") == 0) {
         printf("No ongoing game found for this player.\n");

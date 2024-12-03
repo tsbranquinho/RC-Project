@@ -50,7 +50,6 @@ typedef struct Game {
 
 typedef struct Player {
     char plid[ID_SIZE + 1];
-    int is_playing;
     Game *current_game;
     struct Player *next;
     int fd;

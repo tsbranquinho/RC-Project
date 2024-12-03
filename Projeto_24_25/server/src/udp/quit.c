@@ -11,8 +11,7 @@ void handle_quit_request(const char *request, struct sockaddr_in *client_addr, s
     }
 
     Player *player = find_player(plid);
-    if (!player || !player->is_playing) {
-
+    if (!player) {
         send_udp_response("RQT NOK\n", client_addr, client_addr_len, udp_socket);
         return;
     }
@@ -81,8 +80,7 @@ int end_game(Player *player) {
         free(trial);
     }
     free(player->current_game);
-    player->is_playing = 0;
-    player->current_game = NULL;
+    free(player);
     return 0;
 }
 

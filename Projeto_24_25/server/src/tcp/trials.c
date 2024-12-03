@@ -24,27 +24,21 @@ void handle_trials_request(int tcp_socket) {
     printf("[DEBUG] Received TRIALS request from %s\n", plid);
     printf("plid: %s\n", plid);
     Player *player = find_player(plid);
-    if (player == NULL) {
-        //TODO send NOK
-        printf("Player not found\n");
-        send_tcp_response("NOK\n", tcp_socket);
-        return;
-    }
 
     pthread_mutex_t *plid_mutex = mutex_plid(plid);
     if (!plid_mutex) {
         send_tcp_response("ERR\n", tcp_socket);
         return;
     }
-
-    if (!player->is_playing) {
+    if (player == NULL) {
         //TODO send FIN e enviar os jogos mais recentes do player (função de ordenação no guia e no fim)
         //I truly have no idea if this is what it's supposed to do
         if (FindLastGame(plid, buffer)) {
+            //TODO send FIN
             send_tcp_response(buffer, tcp_socket);
         }
         else {
-            send_tcp_response("FIN\n", tcp_socket);
+            send_tcp_response("NOK\n", tcp_socket);
         }
         mutex_unlock(plid_mutex);
         return;

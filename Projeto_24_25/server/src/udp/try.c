@@ -94,6 +94,14 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         score_game(player);
         end_game(player);
     } else {
+        if (player->current_game->trial_count == MAX_TRIALS) {
+            player->current_game->trial_count++; //Está errado e excedemos o limite de tentativas
+            if (check_try_ent(player, response) < 0) {
+                send_udp_response(response, client_addr, client_addr_len, udp_socket);
+                mutex_unlock(plid_mutex);
+                return;
+            }
+        }
         snprintf(response, sizeof(response), "RTR OK %d %d %d\n", trial_num, black, white);
     }
 
@@ -123,7 +131,7 @@ int check_try_err(const char *request, int n_args, char *aux_guess, int *trial_n
 }
 
 int check_try_nok(const char *plid, Player *player) {
-    if (!player || !player->is_playing) {
+    if (!player) {
         return -1;
     }
     return 0;

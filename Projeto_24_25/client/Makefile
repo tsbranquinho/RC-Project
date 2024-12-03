@@ -15,13 +15,13 @@ SRCS = $(SRC_DIR)/main.c \
 OBJS = $(SRCS:.c=.o)
 
 # Final executable
-EXEC = $(BUILD_DIR)/player
+EXEC = ./player
 
 all: $(EXEC) 
 	@echo "Client build complete!"
 
 $(EXEC): $(OBJS)
-	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/player $(OBJS)
+	@$(CC) $(CFLAGS) -o player $(OBJS)
 
 run: $(EXEC)
 	@$(EXEC) $(ARGS)

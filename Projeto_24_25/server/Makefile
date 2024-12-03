@@ -15,13 +15,13 @@ SRCS = $(SRC_DIR)/main.c \
 OBJS = $(SRCS:.c=.o)
 
 # Final executable
-EXEC = $(BUILD_DIR)/GS
+EXEC = ./GS
 
 all: $(EXEC) 
 	@echo "Server build complete!"
 
 $(EXEC): $(OBJS)
-	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/GS $(OBJS)
+	@$(CC) $(CFLAGS) -o GS $(OBJS)
 
 run: $(EXEC)
 	@$(EXEC) $(ARGS)

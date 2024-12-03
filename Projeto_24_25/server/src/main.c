@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
 
     printf("Game Server is running.\n");
 
-    int num_threads = sysconf(_SC_NPROCESSORS_ONLN);
+    int num_threads = sysconf(_SC_NPROCESSORS_ONLN) * 2;
     if (num_threads <= 0) num_threads = 4;
     printf("Number of threads: %d\n", num_threads);
 
@@ -233,6 +233,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (FD_ISSET(udp_socket, &temp_fds)) {
+            printf("udp\n");
             char buffer[1024];
             struct sockaddr_in client_addr;
             socklen_t addr_len = sizeof(client_addr);
@@ -247,6 +248,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (FD_ISSET(tcp_socket, &temp_fds)) {
+            printf("here\n");
             struct sockaddr_in client_addr;
             socklen_t addr_len = sizeof(client_addr);
             int client_socket = accept(tcp_socket, (struct sockaddr *)&client_addr, &addr_len);

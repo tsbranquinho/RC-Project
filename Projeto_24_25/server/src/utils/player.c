@@ -92,7 +92,6 @@ Player *create_player(const char *plid) {
 
     strncpy(player->plid, plid, ID_SIZE);
     player->plid[ID_SIZE] = '\0';
-    player->is_playing = 0;
     player->current_game = NULL;
     player->next = NULL;
 

@@ -13,7 +13,7 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
     }
 
     Player *player = find_player(plid);
-    if (player != NULL && player->is_playing) {
+    if (player != NULL && player->current_game->trial != NULL) {
         
         pthread_mutex_t *plid_mutex = mutex_plid(plid);
         if (!plid_mutex) {
@@ -43,8 +43,6 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
         return;
     }
-
-    player->is_playing = 1;
 
     player->current_game = malloc(sizeof(Game));
     time(&player->current_game->start_time);
