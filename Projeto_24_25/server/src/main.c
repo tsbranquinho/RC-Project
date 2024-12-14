@@ -112,7 +112,7 @@ void handle_task(Task task) {
             handle_trials_request(client_socket);
         }
         else if (strcmp(buffer, "SSB") == 0) {
-            //handle_scoreboard_request(client_socket);
+            handle_scoreboard_request(client_socket);
         }
         else {
             //NOT SURE IF THIS IS THE RIGHT RESPONSE

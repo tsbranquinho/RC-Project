@@ -2,7 +2,7 @@
 #include "../include/prototypes.h"
 #include "../include/globals.h"
 
-char*GSIP = DEFAULT_IP;                 // Default IP
+char*GSIP = DEFAULT_IP;                  // Default IP
 int GSport = DEFAULT_PORT;               // Default port
 int currPlayer = 0;                      // Flag to check if a player is playing or not
 int currTries = 0;                       // Number of tries of the current player (it starts with the "1st try")

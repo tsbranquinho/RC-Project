@@ -3,6 +3,7 @@
 #include "../../include/globals.h"
 
 void handle_trials_request(int tcp_socket) {
+    //TODO mandar ficheiro alterado
 
     printf("[DEBUG] Received TRIALS request\n");
     char buffer[4096];
@@ -27,7 +28,7 @@ void handle_trials_request(int tcp_socket) {
 
     pthread_mutex_t *plid_mutex = mutex_plid(plid);
     if (!plid_mutex) {
-        send_tcp_response("ERR\n", tcp_socket);
+        send_tcp_response("RST ERR\n", tcp_socket);
         return;
     }
     if (player == NULL) {
@@ -38,7 +39,7 @@ void handle_trials_request(int tcp_socket) {
             send_tcp_response(buffer, tcp_socket);
         }
         else {
-            send_tcp_response("NOK\n", tcp_socket);
+            send_tcp_response("RST NOK\n", tcp_socket);
         }
         mutex_unlock(plid_mutex);
         return;
@@ -61,7 +62,7 @@ void handle_trials_request(int tcp_socket) {
     fseek(file, 0, SEEK_END);
     filesize = ftell(file);
     rewind(file);
-    snprintf(buffer, sizeof(buffer), "ACT RST %s %d\n", tempfilename, filesize);
+    snprintf(buffer, sizeof(buffer), "RST ACT %s %d\n", tempfilename, filesize);
     while (fgets(buffer + strlen(buffer), filesize + 1, file) != NULL) {
         continue;
     }

@@ -28,40 +28,79 @@ void send_show_scoreboard_msg(int fd) {
 }
 
 void receive_show_scoreboard_msg(int fd) {
-    char response[BUFFER_SIZE * 10];
-    if (read_tcp_socket(fd, response, sizeof(response)) == -1) {
-        fprintf(stderr, "ERROR: Failed to receive 'show_scoreboard' response\n");
-        return;
-    }
+    char response[4096];
+    char status[6];
+    char command[4];
 
-    char status[10], filename[1024]; //TODO
+    char filename[1024]; //TODO not sure o tamanho que ponho
     int file_size;
     char *file_data = NULL;
 
-    if (sscanf(response, "RSS %s %s %d\n", status, filename, &file_size) >= 1) {
-        if (strcmp(status, "OK") == 0) {
-            file_data = strstr(response, "\n\n") + 2;
-            if (!file_data || strlen(file_data) != (size_t)file_size) {
-                fprintf(stderr, "Incomplete file data.\n");
-                return;
-            }
+    if (read_tcp_socket(fd, response, sizeof(response)) == -1) {
+        printf("ERROR: Failed to receive 'show_scoreboard' response\n");
+        return;
+    }
 
-            FILE *fp = fopen(filename, "w");
-            if (!fp) {
-                perror("Error saving file");
-                return;
-            }
-            fwrite(file_data, 1, file_size, fp);
-            fclose(fp);
+    if (sscanf(response, "%s %s", command, status) < 2) {
+        printf("ERROR: Failed to parse 'show_scoreboard' response\n");
+        return;
+    }
+    
+    if (strcmp(command, "RSS") != 0) {
+        printf("ERROR: Unexpected 'show_scoreboard' response\n");
+        return;
+    }
 
-            printf("Scoreboard saved to '%s'.\n", filename);
-            printf("Top 10 Scores:\n%s\n", file_data);
-        } else if (strcmp(status, "EMPTY") == 0) {
-            printf("The scoreboard is empty.\n");
-        } else {
-            printf("Unexpected server response: %s\n", response);
+    if (strcmp(status, "OK") == 0) {
+        if (sscanf(response + strlen(command) + strlen(status) + 2, "%s %d\n", filename, &file_size) >= 1) {
+            printf("Filename: %s, File size: %d\n", filename, file_size);
+
+            // A parte após o '\n' no response contém os dados do arquivo
+            char *file_data_start = strchr(response, '\n');  // Procurar o primeiro '\n'
+            if (file_data_start != NULL) {
+                file_data_start++; // Mover para o próximo caractere após o '\n'
+
+                // Alocar memória para armazenar os dados do arquivo
+                file_data = malloc(file_size + 1); // +1 para o terminador nulo
+                if (!file_data) {
+                    printf("ERROR: Memory allocation failed\n");
+                    return;
+                }
+
+                // Copiar os dados do arquivo para o buffer
+                strncpy(file_data, file_data_start, file_size);
+                file_data[file_size] = '\0'; // Garantir que os dados do arquivo sejam uma string válida
+
+                // Agora podemos salvar o arquivo
+                FILE *fp = fopen(filename, "w");
+                if (!fp) {
+                    perror("Error saving file");
+                    free(file_data); // Liberar a memória
+                    return;
+                }
+
+                // Salvar os dados do arquivo
+                fwrite(file_data, 1, file_size, fp);
+                fclose(fp);
+
+                printf("Scores saved to '%s'.\n", filename);
+                printf("Scoreboard:\n%s\n", file_data);
+
+                // Liberar a memória alocada para os dados do arquivo
+                free(file_data);
+            }
+            else {
+                printf("ERROR: Incomplete file data\n");
+            }
         }
-    } else {
-        printf("Invalid response format.\n");
+        else {
+            printf("Unexpected server response1: %s\n", response);
+        }
+    }
+    else if (strcmp(status, "EMPTY") == 0) {
+        printf("Scoreboard empty.\n");
+    }
+    else {
+        printf("Unexpected server response2: %s\n", response);
     }
 }

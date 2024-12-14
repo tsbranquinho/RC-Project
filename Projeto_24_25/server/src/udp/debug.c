@@ -7,7 +7,9 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
     int max_time;
     char key[MAX_COLORS + 1];
 
-    if (sscanf(request, "DBG %6s %3d %4s", plid, &max_time, key) != 3 || max_time <= 0 || max_time > MAX_PLAYTIME) {
+    //TODO verificar se isto está bem
+
+    if (sscanf(request, "DBG %6s %3d %[^\n]", plid, &max_time, key) != 3 || max_time <= 0 || max_time > MAX_PLAYTIME) {
         send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
         return;
     }

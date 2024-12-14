@@ -3,6 +3,7 @@
 #include "../../include/globals.h"
 
 int handle_show_trials(const char *input) {
+    //TODO verificar PLID
     if (strcmp(input, "st") != 0 && strcmp(input, "show_trials") != 0) {
         return invalid_command_format(CMD_SHOW_TRIALS);
     }
@@ -30,6 +31,7 @@ void send_show_trials_msg(int fd) {
 void receive_show_trials_msg(int fd) {
     char response[4096];
     char status[4];
+    char command[4];
 
     char filename[1024]; //TODO not sure o tamanho que ponho
     int file_size;
@@ -40,13 +42,17 @@ void receive_show_trials_msg(int fd) {
         return;
     }
 
-    if (sscanf(response, "%s", status) != 1) {
+    if (sscanf(response, "%s %s ", command, status) != 1) {
         printf("ERROR: Failed to parse 'show_trials' response\n");
+        return;
+    }
+    if (strcmp(command, "RST") != 0) {
+        printf("ERROR: Unexpected 'show_trials' response\n");
         return;
     }
 
     if (strcmp(status, "ACT") == 0 || strcmp(status, "FIN") == 0) {
-        if (sscanf(response + strlen(status) + 1, "RST %s %d\n", filename, &file_size) >= 1) {
+        if (sscanf(response + strlen(command) + strlen(status) + 2, "%s %d\n", filename, &file_size) >= 1) {
             printf("Filename: %s, File size: %d\n", filename, file_size);
 
             // A parte após o '\n' no response contém os dados do arquivo

@@ -83,7 +83,7 @@ void sig_detected(int sig) {
     printf("Shutting down the server...\n");
 
     // TODO: free memory, close all sockets, threads....
-    cleanup_server(); // Limpar Hash Table e Lock Table
+    //cleanup_server(); // Limpar Hash Table e Lock Table
 
     delete_directory_contents("GAMES");
 

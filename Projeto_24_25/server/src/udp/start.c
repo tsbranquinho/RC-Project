@@ -90,9 +90,17 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
 
 void generate_random_key(char *key) {
     const char *colors = COLOR_OPTIONS;
-    srand(time(NULL));
+    size_t num_colors = strlen(colors);
+    
+    static int seeded = 0;
+    if (!seeded) {
+        srand((unsigned int)time(NULL) ^ (unsigned int)getpid()); // Include PID for more randomness
+        seeded = 1;
+    }
+
+    // Generate the random key
     for (int i = 0; i < MAX_COLORS; i++) {
-        key[i] = colors[rand() % strlen(colors)];
+        key[i] = colors[rand() % num_colors];
     }
     key[MAX_COLORS] = '\0';
 }

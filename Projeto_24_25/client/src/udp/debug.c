@@ -9,7 +9,8 @@ int handle_debug(const char *input) {
     memset(plid, 0, sizeof(plid));
     memset(code, 0, sizeof(code));
 
-    if (sscanf(input, "debug %s %u %s", plid, &max_playtime, code) != 3) {
+    //TODO verificar se isto está bem
+    if (sscanf(input, "debug %s %u %[^\n]", plid, &max_playtime, code) != 3) {
         return invalid_command_format(CMD_DEBUG);
     }
 

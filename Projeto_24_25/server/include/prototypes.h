@@ -45,6 +45,9 @@ void sig_detected(int sig);
 void handle_trials_request(int tcp_socket);
 int FindLastGame(char *PLID, char *filename);
 
+void handle_scoreboard_request(int tcp_socket);
+int FindTopScores(char* buffer);
+
 //TODO tirar threads da main
 
 pthread_mutex_t *mutex_plid(const char *plid);

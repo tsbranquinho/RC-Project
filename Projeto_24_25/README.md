@@ -12,5 +12,6 @@ Se cliente receber mensagens mal formatadas: temina interação com o servidor e
 CORRIGIR DINAMICIDADE DAS PASTAS OU ALTERAR SÓ O SÍTIO DA BUILD
 PROBLEMAS COM EXIT NOK
 meter na make para receber argumentos ...
+ver show_trials e FIN
 
 podemos testar com o servidor daqui
