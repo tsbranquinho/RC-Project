@@ -42,7 +42,7 @@ void receive_show_trials_msg(int fd) {
         return;
     }
 
-    if (sscanf(response, "%s %s ", command, status) != 1) {
+    if (sscanf(response, "%s %s", command, status) < 2) {
         printf("ERROR: Failed to parse 'show_trials' response\n");
         return;
     }

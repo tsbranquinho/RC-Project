@@ -10,6 +10,7 @@ Command get_next_command(char *input) {
     if (strncmp(input, "debug", 5) == 0) return CMD_DEBUG;
     if (strncmp(input, "st", 2) == 0 || strncmp(input, "show_trials", 11) == 0) return CMD_SHOW_TRIALS;
     if (strncmp(input, "sb", 2) == 0 || strncmp(input, "scoreboard", 10) == 0) return CMD_SCOREBOARD;
+    if (strncmp(input, "set", 3) == 0) return CMD_SET;
     return CMD_INVALID;
 }
 
@@ -45,6 +46,10 @@ int handle_command(Command cmd, const char* input) {
 
         case CMD_SCOREBOARD:
             return_value = handle_show_scoreboard(input);
+            break;
+
+        case CMD_SET:
+            return_value = handle_set(input);
             break;
 
         default:

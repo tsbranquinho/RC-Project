@@ -15,3 +15,31 @@ meter na make para receber argumentos ...
 ver show_trials e FIN
 
 podemos testar com o servidor daqui
+
+# Projeto_RC
+
+## Client Commands to implement
+
+To test the commands, run `./player -n 193.136.138.142 -p 58011`
+
+- start ✅
+- try ✅
+- quit ✅
+- exit ✅
+- debug ✅
+- trials ✅ / Missing FIN
+- scoreboard ✅
+//Extras
+- set ✅
+- hint
+
+## Server Commands to implement
+- start ✅
+- try ✅
+- quit ✅
+- debug ✅
+- trials ✅ / Missing FIN and formatting
+- scoreboard ✅
+- hint
+
+--set PLID done, try dynamic formatting done, debug done

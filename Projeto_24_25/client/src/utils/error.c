@@ -3,7 +3,7 @@
 #include "../../include/globals.h"
 
 int errorCurrentPlayer(const char *plid) {
-    if(currPlayer && strcmp(plidCurr, plid) != 0){
+    if(currPlayer && strcmp(plidCurr, plid) != 0 && setPLID == 0){
         printf("There is already a player playing. Please quit the current game to start a new one.\n");
         return 1;
     }
@@ -46,6 +46,9 @@ int invalid_command_format(Command cmd) {
         fprintf(stderr, "Invalid 'show_trials' command format. Format: st or Format: show_trials\n");
     } else if (cmd == CMD_SCOREBOARD) {
         fprintf(stderr, "Invalid 'scoreboard' command format. Format: sb or Format: scoreboard\n");
+    //extras
+    } else if (cmd == CMD_SET){
+        fprintf(stderr, "Invalid 'set' command format. Format: set <player_id>\n");
     } else {
         fprintf(stderr, "Invalid command format.\n");
     }

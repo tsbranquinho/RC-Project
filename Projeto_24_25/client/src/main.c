@@ -7,6 +7,7 @@ int GSport = DEFAULT_PORT;               // Default port
 int currPlayer = 0;                      // Flag to check if a player is playing or not
 int currTries = 0;                       // Number of tries of the current player (it starts with the "1st try")
 char plidCurr[ID_SIZE + 1];              // Current player ID
+int setPLID = 0;
 struct addrinfo *res;
 
 int main(int argc, char *argv[]) {

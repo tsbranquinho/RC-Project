@@ -51,7 +51,7 @@ void handle_trials_request(int tcp_socket) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         perror("fopen");
-        send_tcp_response("ERR\n", tcp_socket); //TODO acho que é isto
+        send_tcp_response("RST ERR\n", tcp_socket); //TODO acho que é isto
         mutex_unlock(plid_mutex);
         return;
     }

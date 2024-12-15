@@ -76,12 +76,14 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     }
 
     if (calculate_feedback(guess, player->current_game->secret_key, &black, &white) < 0) {
+        player->current_game->trial_count--;
         send_udp_response("RTR ERR\n \0", client_addr, client_addr_len, udp_socket);
         mutex_unlock(plid_mutex);
         return;
     }
     
     if (write_try_to_file(player, guess, black, white) < 0) {
+        player->current_game->trial_count--;
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         mutex_unlock(plid_mutex);
         return;
@@ -142,7 +144,7 @@ int check_try_etm(Player *player, char* response) {
         char temp[2*MAX_COLORS];
         convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
         printf("[DEBUG] temp: %s\n", temp);
-        snprintf(response, BUFFER_SIZE, "RTR ENT -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
+        snprintf(response, BUFFER_SIZE, "RTR ENT %s\n", temp); //TODO corrigir isto, é temporário o fix
         player->current_game->end_status = 'T';
         return -1;
     }
@@ -188,7 +190,7 @@ int check_try_ent(Player *player, char* response) {
         char temp[2*MAX_COLORS];
         convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
         printf("[DEBUG] temp: %s\n", temp);
-        snprintf(response, BUFFER_SIZE, "RTR ENT -1 -1 -1 %s\n", temp); //TODO corrigir isto, é temporário o fix
+        snprintf(response, BUFFER_SIZE, "RTR ENT %s\n", temp); //TODO corrigir isto, é temporário o fix
         player->current_game->end_status = 'F';
         end_game(player);
         return -1;

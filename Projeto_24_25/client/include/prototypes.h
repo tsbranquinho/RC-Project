@@ -51,6 +51,8 @@ void invalid_playtime(unsigned int time);
 void error_communicating_with_server(const char *msg);
 void error_no_game(Command cmd);
 void invalid_code(int mode);
+//set.c
+int handle_set(const char* input);
 
 
 #endif

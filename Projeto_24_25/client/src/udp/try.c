@@ -51,6 +51,7 @@ void try_code(const char *code) {
     receive_try_msg(response);
 }
 
+
 void receive_try_msg(const char *response) {
     char status[MAX_STATUS_SIZE];
     int black = 0, white = 0;
@@ -59,16 +60,16 @@ void receive_try_msg(const char *response) {
     memset(status, 0, sizeof(status));
     memset(code, 0, sizeof(code));
 
-    if (sscanf(response, "RTR %s %d %d %d %[^\n]", status, &tries, &black, &white, code) < 1) {
+    //TODO tornar isto bonito
+    if (sscanf(response, "RTR %s", status) < 1) {
         return error_communicating_with_server(response);
     }
     printf("check\n");
     printf("status: %s\n", status);
-
-    //TODO: verificar para cada resposta de status
-    //    : verificar se o code está bem mandado
-
-    if (strcmp(status, "OK") == 0) {
+    if (strcmp("OK", status) == 0) {
+        if (sscanf(response + 4 + 3, "%d %d %d", &tries, &black, &white) < 3) {
+            return error_communicating_with_server(response);
+        }
         currTries = tries;
         printf("Tries: %d, Black: %d, White: %d\n", currTries, black, white);
 
@@ -76,22 +77,29 @@ void receive_try_msg(const char *response) {
             printf("Congratulations! You've cracked the secret code.\n");
             end_game();
         }
-    } else if (strcmp(status, "DUP") == 0) {
+    } else if (strcmp("DUP", status) == 0) {
         printf("Duplicate code entered. Try a different combination.\n");
-    } else if (strcmp(status, "ENT") == 0) {
+    } else if (strcmp("INV", status) == 0) {
+        printf("Invalid trial format or sequence.\n");
+    } else if (strcmp("NOK", status) == 0) {
+        printf("No ongoing game found for this player.\n");
+    } else if (strcmp("ERR", status) == 0) {
+        printf("Error trying code. Please verify inputs or try again later.\n");
+    } else if (strcmp("ENT", status) == 0) {
+        if (sscanf(response + 4 + 4, "%[^\n]", code) < 1) {
+            return error_communicating_with_server(response);
+        }
         printf("No more attempts left. You lose! The secret code was: %s\n", code);
         end_game();
-    } else if (strcmp(status, "ETM") == 0) {
+    } else if (strcmp("ETM", status) == 0) {
+        if (sscanf(response + 4 + 4, "%[^\n]", code) < 1) {
+            return error_communicating_with_server(response);
+        }
         printf("Time limit exceeded. You lose! The secret code was: %s\n", code);
         end_game();
-    } else if (strcmp(status, "INV") == 0) {
-        //TODO ponderar aumentar o trial number para dar match
-        printf("Invalid trial format or sequence.\n");
-    } else if (strcmp(status, "NOK") == 0) {
-        printf("No ongoing game found for this player.\n");
-    } else if (strcmp(status, "ERR") == 0) {
-        printf("Error trying code. Please verify inputs or try again later.\n");
     } else {
         return error_communicating_with_server(response);
     }
+
+    
 }

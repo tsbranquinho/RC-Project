@@ -55,6 +55,7 @@ void receive_start_msg(const char *response, const char *plid) {
         strcpy(plidCurr, plid);
         currTries = 0;
         currPlayer = 1;
+        setPLID = 0;
     } else if (strcmp(status, "NOK") == 0) {
         printf("Game not started: an ongoing game exists for this player.\n");
     } else if (strcmp(status, "ERR") == 0) {

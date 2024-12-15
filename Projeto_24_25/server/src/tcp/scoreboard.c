@@ -35,6 +35,7 @@ int FindTopScores(char* buffer) {
         ifile = 0;
         while (nentries--) {
             // Ignora arquivos ocultos e limita a 10 arquivos
+            printf("filelist[%d]->d_name: %s\n", nentries, filelist[nentries]->d_name);
             if (filelist[nentries]->d_name[0] != '.' && ifile < 10) {
                 sprintf(fname, "SCORES/%s", filelist[nentries]->d_name);
                 fp = fopen(fname, "r");
