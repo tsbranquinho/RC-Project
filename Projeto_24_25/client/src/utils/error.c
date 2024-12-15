@@ -7,18 +7,22 @@ int errorCurrentPlayer(const char *plid) {
         printf("There is already a player playing. Please quit the current game to start a new one.\n");
         return 1;
     }
+    if(strlen(plid) == 0){
+        printf("No player ID provided.\n");
+        return 1;
+    }
     return 0;
 }
 
 void sig_detected(int sig) {
     if (currPlayer) {
         printf("Game interrupted. Exiting...\n");
-        //quit_game(); //TODO só no final podemos tirar isto senão semrpe que fizermos ctrl c o server tem estar ligado e o crlh
+        //exit_game(); //TODO só no final podemos tirar isto senão semrpe que fizermos ctrl c o server tem estar ligado e o crlh
         exit(0);
     } else {
         printf("Exiting...\n");
-        exit(0);
         //exit_game();    //TODO só no final podemos tirar isto senão semrpe que fizermos ctrl c o server tem estar ligado e o crlh
+        exit(0);
     }
 }
 

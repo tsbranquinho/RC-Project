@@ -7,6 +7,11 @@ int handle_show_trials(const char *input) {
     if (strcmp(input, "st") != 0 && strcmp(input, "show_trials") != 0) {
         return invalid_command_format(CMD_SHOW_TRIALS);
     }
+
+    if(strcmp(plidCurr, "") == 0) {
+        return errorCurrentPlayer(plidCurr);
+    }
+    
     int sockfd = connect_to_server(&res);
     if (sockfd < 0) return TRUE;
 

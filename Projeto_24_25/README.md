@@ -15,7 +15,6 @@ meter na make para receber argumentos ...
 ver show_trials e FIN
 
 podemos testar com o servidor daqui
-
 # Projeto_RC
 
 ## Client Commands to implement
@@ -27,7 +26,7 @@ To test the commands, run `./player -n 193.136.138.142 -p 58011`
 - quit ✅
 - exit ✅
 - debug ✅
-- trials ✅ / Missing FIN
+- trials ✅ / Missing FIN ainda mandamos a chave quando estamos a meio
 - scoreboard ✅
 //Extras
 - set ✅

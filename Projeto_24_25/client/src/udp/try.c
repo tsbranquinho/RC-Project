@@ -75,7 +75,8 @@ void receive_try_msg(const char *response) {
 
         if (black == MAX_COLORS) {
             printf("Congratulations! You've cracked the secret code.\n");
-            end_game();
+            //end_game();
+            currTries = 0;
         }
     } else if (strcmp("DUP", status) == 0) {
         printf("Duplicate code entered. Try a different combination.\n");
@@ -90,13 +91,15 @@ void receive_try_msg(const char *response) {
             return error_communicating_with_server(response);
         }
         printf("No more attempts left. You lose! The secret code was: %s\n", code);
-        end_game();
+        //end_game();
+        currTries = 0;
     } else if (strcmp("ETM", status) == 0) {
         if (sscanf(response + 4 + 4, "%[^\n]", code) < 1) {
             return error_communicating_with_server(response);
         }
         printf("Time limit exceeded. You lose! The secret code was: %s\n", code);
-        end_game();
+        //end_game();
+        currTries = 0;
     } else {
         return error_communicating_with_server(response);
     }

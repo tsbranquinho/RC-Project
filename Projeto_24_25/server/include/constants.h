@@ -12,6 +12,7 @@
 #include <netinet/in.h>  // For sockaddr_in
 #include <time.h>  // For time functions
 #include <signal.h>
+#include <ctype.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/select.h>
@@ -71,5 +72,12 @@ typedef struct {
     pthread_mutex_t lock;
     pthread_cond_t cond;
 } TaskQueue;
+
+typedef struct {
+    int verbose_mode;
+    int udp_socket;
+    int tcp_socket;
+} set;
+
 
 #endif

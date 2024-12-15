@@ -25,11 +25,14 @@ int FindTopScores(char* buffer) {
     char temp_buffer[1024] = ""; // Inicializa temp_buffer vazio
     int offset = 0; // Variável para controlar a posição atual no temp_buffer
 
+    pthread_rwlock_rdlock(&scoreboard_lock);
+
     // Lê os arquivos do diretório SCORES/ e ordena alfabeticamente
     nentries = scandir("SCORES/", &filelist, 0, alphasort);
     printf("Number of entries: %d\n", nentries);
-    if (nentries <= 0) {
+    if (nentries <= 2) { //TODO era isto certo branquinho?
         snprintf(buffer, 11, "RSS EMPTY\n");
+        pthread_rwlock_unlock(&scoreboard_lock);
         return 0;
     } else {
         ifile = 0;
@@ -66,11 +69,16 @@ int FindTopScores(char* buffer) {
         free(filelist);
     }
 
+    pthread_rwlock_unlock(&scoreboard_lock);
+
     int filesize = strlen(temp_buffer);
+
+    /* TODO em principio isto já não é necessário
     if (filesize == 0) {
         snprintf(buffer, 11, "RSS EMPTY\n");
         return 0;
     }
+    */
     snprintf(buffer, 4096, "RSS OK %s %d\n", filename, filesize);
     strncat(buffer, temp_buffer, 4096 - strlen(buffer) - 1);
 

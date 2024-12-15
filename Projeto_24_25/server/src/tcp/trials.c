@@ -15,7 +15,7 @@ void handle_trials_request(int tcp_socket) {
     buffer[n-1] = '\0';
     printf("[DEBUG] Received message: %s\n", buffer);
 
-    if (sscanf(buffer, "%6s", plid) != 1) {
+    if (is_number(plid) == FALSE || sscanf(buffer, "%6s", plid) != 1) {
         //TODO send ERR
         send_tcp_response("ERR\n", tcp_socket);
         return;
@@ -31,11 +31,9 @@ void handle_trials_request(int tcp_socket) {
         send_tcp_response("RST ERR\n", tcp_socket);
         return;
     }
+
     if (player == NULL) {
-        //TODO send FIN e enviar os jogos mais recentes do player (função de ordenação no guia e no fim)
-        //I truly have no idea if this is what it's supposed to do
         if (FindLastGame(plid, buffer)) {
-            //TODO send FIN
             send_tcp_response(buffer, tcp_socket);
         }
         else {
@@ -47,14 +45,17 @@ void handle_trials_request(int tcp_socket) {
 
     char filename[128];
     memset(filename, 0, sizeof(filename));
+
     snprintf(filename, sizeof(filename), "GAMES/GAME_%s.txt", player->plid);
     FILE *file = fopen(filename, "r");
+
     if (file == NULL) {
         perror("fopen");
         send_tcp_response("RST ERR\n", tcp_socket); //TODO acho que é isto
         mutex_unlock(plid_mutex);
         return;
     }
+
     char* tempfilename = strrchr(filename, '/');
     tempfilename++;
     memset(buffer, 0, sizeof(buffer));
@@ -63,6 +64,7 @@ void handle_trials_request(int tcp_socket) {
     filesize = ftell(file);
     rewind(file);
     snprintf(buffer, sizeof(buffer), "RST ACT %s %d\n", tempfilename, filesize);
+
     while (fgets(buffer + strlen(buffer), filesize + 1, file) != NULL) {
         continue;
     }
@@ -71,32 +73,57 @@ void handle_trials_request(int tcp_socket) {
     fclose(file);
 
     mutex_unlock(plid_mutex);
-    //no fundo é enviar este ficheiro por TCP
 }
 
-int FindLastGame(char *PLID, char *filename) {
+int FindLastGame(char *PLID, char *buffer) {
     struct dirent **filelist;
-    int n_entries, found;
-    char dirname[20];
+    int n_entries;
+    char dirname[128], latest_file[512]; // TODO valores tirados do cu
+    memset(dirname, 0, sizeof(dirname));
+    memset(latest_file, 0, sizeof(latest_file));
 
-    sprintf(dirname, "GAMES/%s", PLID);
+    snprintf(dirname, sizeof(dirname), "GAMES/%s", PLID);
 
-    n_entries = scandir(dirname, &filelist, 0, alphasort);
-
-    found = 0;
-
-    if (n_entries < 0) {
+    n_entries = scandir(dirname, &filelist, NULL, alphasort);
+    if (n_entries <= 2) {
         return 0;
     }
-    else {
-        while (n_entries--) {
-            if (filelist[n_entries]->d_name[0] != '.' && !found) {
-                sprintf(filename, "GAMES/%s/%s", PLID, filelist[n_entries]->d_name);
-                found = 1;
-            }
-            free(filelist[n_entries]);
+
+    for (int i = 0; i < n_entries; i++) {
+        if (filelist[i]->d_name[0] == '.') {
+            free(filelist[i]);
+            continue;
         }
-        free(filelist);
+
+        if (strlen(filelist[i]->d_name) >= 15 && isdigit(filelist[i]->d_name[0])) {
+            int written = snprintf(latest_file, sizeof(latest_file), "%s/%s", dirname, filelist[i]->d_name);
+            if (written < 0 || written >= sizeof(latest_file)) {
+                fprintf(stderr, "Error: File path too long!\n");
+                free(filelist[i]);
+                continue;
+            }
+        }
+
+        free(filelist[i]);
     }
-    return(found);
+    free(filelist);
+
+    FILE *file = fopen(latest_file, "r");
+    if (!file) {
+        perror("fopen");
+        return 0;
+    }
+
+
+    //TODO valores todos errados
+    memset(buffer, 0, BUFFER_SIZE);
+    snprintf(buffer, BUFFER_SIZE, "RST FIN %s\n", strrchr(latest_file, '/') + 1);
+
+    size_t header_length = strlen(buffer);
+    size_t bytes_read = fread(buffer + header_length, 1, BUFFER_SIZE - header_length - 1, file);
+
+    buffer[header_length + bytes_read] = '\0';
+    fclose(file);
+
+    return 1;
 }

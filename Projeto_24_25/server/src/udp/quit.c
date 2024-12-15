@@ -106,6 +106,8 @@ int score_game(Player *player) {
         strncpy(mode, "PLAY", sizeof(mode));
     }
 
+    pthread_rwlock_wrlock(&scoreboard_lock);
+
     char filename[128];
     memset(filename, 0, sizeof(filename));
     snprintf(filename, sizeof(filename), "SCORES/%03d_%s_%02d%02d%04d_%02d%02d%02d.txt", 
@@ -114,6 +116,7 @@ int score_game(Player *player) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         perror("fopen");
+        pthread_rwlock_unlock(&scoreboard_lock);
         return -1;
     }
     char buffer[128];
@@ -123,8 +126,11 @@ int score_game(Player *player) {
     if (fwrite(buffer, 1, strlen(buffer), file) != strlen(buffer)) {
         perror("fwrite");
         fclose(file);
+        pthread_rwlock_unlock(&scoreboard_lock);
         return -1;
     }
     fclose(file);
+
+    pthread_rwlock_unlock(&scoreboard_lock);
     return 0;
 }
