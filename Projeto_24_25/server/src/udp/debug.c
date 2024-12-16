@@ -9,22 +9,17 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
     char aux[MAX_COLORS+1];
     memset(plid, 0, sizeof(plid));
     memset(key, 0, sizeof(key));
+    memset(aux, 0, sizeof(aux));
 
     //TODO verificar se isto está bem
     printf("DEBUG REQUEST: %s\n", request);
 
-    if (sscanf(request, "DBG %6s %3d %[^\n]", plid, &max_time, key) != 3 || max_time <= 0 || max_time > MAX_PLAYTIME) {
+    if (sscanf(request, "DBG %6s %3d %c %c %c %c", plid, &max_time, &aux[0], &aux[1], &aux[2], &aux[3]) != 6 || max_time <= 0 || max_time > MAX_PLAYTIME) {
         send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
         return;
     }
 
-    for (int i = 0; i < MAX_COLORS; i++) {
-        if (key[2*i+1] != ' ' && key[2*i+1] != '\0' && strchr(COLOR_OPTIONS, key[2*i]) != NULL) {
-            send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
-            return;
-        }
-        aux[i] = key[2*i];
-    }
+    aux[MAX_COLORS] = '\0';
 
     Player *player = find_player(plid);
     if (player != NULL && player->current_game->trial != NULL) {

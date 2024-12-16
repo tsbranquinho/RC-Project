@@ -53,7 +53,7 @@ Player *find_player(const char *plid) {
     return NULL;
 }
 
-void remove_player(const char *plid) {
+void remove_player(const char *plid, pthread_mutex_t *plid_mutex) {
     unsigned int index = hash(plid);
 
     pthread_rwlock_wrlock(&hash_table_lock);
@@ -72,6 +72,7 @@ void remove_player(const char *plid) {
             free(current);
 
             pthread_rwlock_unlock(&hash_table_lock);
+            mutex_unlock(plid_mutex); //TODO Mutex
             cleanup_plid_mutex(plid);
             return;
         }

@@ -8,6 +8,7 @@ int currPlayer = 0;                      // Flag to check if a player is playing
 int currTries = 0;                       // Number of tries of the current player (it starts with the "1st try")
 char plidCurr[ID_SIZE + 1];              // Current player ID
 int setPLID = 0;
+int hasStarted = 0;
 struct addrinfo *res;
 
 int main(int argc, char *argv[]) {

@@ -43,6 +43,7 @@ void receive_show_trials_msg(int fd) {
     char *file_data = NULL;
 
     if (read_tcp_socket(fd, response, sizeof(response)) == -1) {
+        printf("Response: %s\n", response);
         printf("ERROR: Failed to receive 'show_trials' response\n");
         return;
     }

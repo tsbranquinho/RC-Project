@@ -37,7 +37,8 @@ typedef enum {
     CMD_EXIT,
     CMD_DEBUG,
     CMD_INVALID,
-    CMD_SET
+    CMD_SET,
+    CMD_SLEEP
 } Command;
 
 void get_arguments(int argc, char *argv[]);

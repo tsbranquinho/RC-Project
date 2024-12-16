@@ -27,16 +27,15 @@ void handle_quit_request(const char *request, struct sockaddr_in *client_addr, s
     convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
     player->current_game->end_status = 'Q';
     snprintf(response, sizeof(response), "RQT OK %s\n", temp);
-    if (end_game(player) == -1) {
+    if (end_game(player, plid_mutex) == -1) {
         send_udp_response("RQT ERR\n", client_addr, client_addr_len, udp_socket);
         return;
     }
 
-    mutex_unlock(plid_mutex);
     send_udp_response(response, client_addr, client_addr_len, udp_socket);
 }
 
-int end_game(Player *player) {
+int end_game(Player *player, pthread_mutex_t *plid_mutex) {
     FILE *file = fopen(player->current_game->filename, "a");
     if (file == NULL) {
         perror("fopen");
@@ -65,6 +64,7 @@ int end_game(Player *player) {
     snprintf(directory, sizeof(directory), "GAMES/%s", player->plid);
     if (mkdir(directory, 0777) == -1 && errno != EEXIST) {
         perror("Error creating directory");
+        mutex_unlock(plid_mutex);
         return -1;
     }
     memset(buffer, 0, sizeof(buffer));
@@ -73,14 +73,11 @@ int end_game(Player *player) {
         current_time->tm_hour, current_time->tm_min, current_time->tm_sec, player->current_game->end_status);
     if (rename(player->current_game->filename, buffer) == -1) {
         perror("Error moving file");
+        mutex_unlock(plid_mutex);
         return -1;
     }
 
-    for (Trials *trial = player->current_game->trial; trial != NULL; trial = trial->prev) {
-        free(trial);
-    }
-    free(player->current_game);
-    free(player);
+    remove_player(player->plid, plid_mutex);
     return 0;
 }
 

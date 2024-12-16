@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -g -Iinclude
+CFLAGS = -Wall -g -Iinclude -pthread
 BUILD_DIR = build
 SRC_DIR = src
 COMMON_DIR = ../common
@@ -8,7 +8,6 @@ UDP_DIR = $(SRC_DIR)/udp
 UTILS_DIR = $(SRC_DIR)/utils
 
 SRCS = $(SRC_DIR)/main.c \
-	   $(SRC_DIR)/threads.c \
        $(wildcard $(TCP_DIR)/*.c) \
        $(wildcard $(UDP_DIR)/*.c) \
 	   $(wildcard $(UTILS_DIR)/*.c) \

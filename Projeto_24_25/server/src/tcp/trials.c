@@ -26,20 +26,20 @@ void handle_trials_request(int tcp_socket) {
     printf("plid: %s\n", plid);
     Player *player = find_player(plid);
 
-    pthread_mutex_t *plid_mutex = mutex_plid(plid);
-    if (!plid_mutex) {
-        send_tcp_response("RST ERR\n", tcp_socket);
-        return;
-    }
-
     if (player == NULL) {
         if (FindLastGame(plid, buffer)) {
+            printf("Buffer: %s\n", buffer);
             send_tcp_response(buffer, tcp_socket);
         }
         else {
             send_tcp_response("RST NOK\n", tcp_socket);
         }
-        mutex_unlock(plid_mutex);
+        return;
+    }
+
+    pthread_mutex_t *plid_mutex = mutex_plid(plid);
+    if (!plid_mutex) {
+        send_tcp_response("RST ERR\n", tcp_socket);
         return;
     }
 
@@ -68,6 +68,7 @@ void handle_trials_request(int tcp_socket) {
     while (fgets(buffer + strlen(buffer), filesize + 1, file) != NULL) {
         continue;
     }
+    strncat(buffer, "\n", sizeof(buffer));
     printf("buffer: %s\n", buffer);
     send_tcp_response(buffer, tcp_socket);
     fclose(file);
@@ -117,12 +118,17 @@ int FindLastGame(char *PLID, char *buffer) {
 
     //TODO valores todos errados
     memset(buffer, 0, BUFFER_SIZE);
-    snprintf(buffer, BUFFER_SIZE, "RST FIN %s\n", strrchr(latest_file, '/') + 1);
+    int filesize = 0;
+    fseek(file, 0, SEEK_END);
+    filesize = ftell(file);
+    rewind(file);
+    snprintf(buffer, BUFFER_SIZE, "RST FIN %s %d\n", strrchr(latest_file, '/') + 1, filesize);
 
-    size_t header_length = strlen(buffer);
-    size_t bytes_read = fread(buffer + header_length, 1, BUFFER_SIZE - header_length - 1, file);
-
-    buffer[header_length + bytes_read] = '\0';
+    while (fgets(buffer + strlen(buffer), filesize + 1, file) != NULL) {
+        continue;
+    }
+    strncat(buffer, "\n", BUFFER_SIZE);
+    printf("buffer: %s\n", buffer);
     fclose(file);
 
     return 1;

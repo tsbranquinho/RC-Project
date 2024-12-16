@@ -3,7 +3,7 @@
 #include "../../include/globals.h"
 
 int errorCurrentPlayer(const char *plid) {
-    if(currPlayer && strcmp(plidCurr, plid) != 0 && setPLID == 0){
+    if(currPlayer && currTries != 0 && strcmp(plidCurr, plid) != 0 && setPLID == 0){
         printf("There is already a player playing. Please quit the current game to start a new one.\n");
         return 1;
     }

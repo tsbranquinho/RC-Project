@@ -77,6 +77,7 @@ void receive_try_msg(const char *response) {
             printf("Congratulations! You've cracked the secret code.\n");
             //end_game();
             currTries = 0;
+            hasStarted = 0;
         }
     } else if (strcmp("DUP", status) == 0) {
         printf("Duplicate code entered. Try a different combination.\n");

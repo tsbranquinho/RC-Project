@@ -11,6 +11,7 @@ Command get_next_command(char *input) {
     if (strncmp(input, "st", 2) == 0 || strncmp(input, "show_trials", 11) == 0) return CMD_SHOW_TRIALS;
     if (strncmp(input, "sb", 2) == 0 || strncmp(input, "scoreboard", 10) == 0) return CMD_SCOREBOARD;
     if (strncmp(input, "set", 3) == 0) return CMD_SET;
+    if (strncmp(input, "sleep", 5) == 0) return CMD_SLEEP;
     return CMD_INVALID;
 }
 
@@ -50,6 +51,10 @@ int handle_command(Command cmd, const char* input) {
 
         case CMD_SET:
             return_value = handle_set(input);
+            break;
+
+        case CMD_SLEEP:
+            sleep(20);
             break;
 
         default:

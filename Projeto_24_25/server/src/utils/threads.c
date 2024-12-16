@@ -1,6 +1,6 @@
-#include "../include/constants.h"
-#include "../include/prototypes.h"
-#include "../include/globals.h"
+#include "../../include/constants.h"
+#include "../../include/prototypes.h"
+#include "../../include/globals.h"
 
 pthread_mutex_t *mutex_plid(const char *plid) {
 
@@ -66,14 +66,7 @@ void handle_task(Task task) {
 
         int client_socket = task.client_socket;
         char buffer[1024];
-        struct timeval timeout = {5, 0};
         struct sockaddr_in client_addr = task.client_addr;
-
-        if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-            perror("Error setting socket timeout");
-            close(client_socket);
-            return;
-        }
 
         memset(buffer, 0, sizeof(buffer));
         int n = read_tcp_socket(client_socket, buffer, 4); 
@@ -107,8 +100,6 @@ void handle_task(Task task) {
             //NOT SURE IF THIS IS THE RIGHT RESPONSE
             send_tcp_response("ERR\n", client_socket);
         }
-
-        close(client_socket);
         printf("[TCP] Connection closed\n");
 
     } else {

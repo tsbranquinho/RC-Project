@@ -12,7 +12,7 @@ int handle_quit(const char *input) {
 
 void quit_game() {
 
-    if (currPlayer == 0) {
+    if (hasStarted == 0) {
         return error_no_game(CMD_QUIT);
     }
 
@@ -21,6 +21,7 @@ void quit_game() {
     snprintf(message, sizeof(message), "QUT %s\n", plidCurr);
 
     char response[BUFFER_SIZE];
+    memset(response, 0, sizeof(response));
     printf("[DEBUG] Sending quit request: %s", message); // Debug log
 
     if (send_udp_skt(message, response, sizeof(response), GSIP, GSport) < 0) {
@@ -44,6 +45,7 @@ void receive_quit_msg(const char *response) {
 
     if (strcmp(status, "OK") == 0 && matched == 2) {
         printf("Game successfully quit. The secret code was: %s\n", secret_code);
+        hasStarted = 0;
     } else if (strcmp(status, "NOK") == 0) {
         printf("No ongoing game found for this player.\n");
     } else if (strcmp(status, "ERR") == 0) {

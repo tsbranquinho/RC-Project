@@ -13,7 +13,7 @@ int handle_exit(const char *input) {
 
 void exit_game() {
     // If the player is playing, quit the game
-    if (currPlayer) {
+    if (currPlayer && hasStarted) {
         quit_game();
     }
     printf("Exiting the application.\n");

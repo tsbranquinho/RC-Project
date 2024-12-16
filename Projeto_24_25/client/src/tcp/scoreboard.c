@@ -40,6 +40,7 @@ void receive_show_scoreboard_msg(int fd) {
         printf("ERROR: Failed to receive 'show_scoreboard' response\n");
         return;
     }
+    printf("Response: %s\n", response);
 
     if (sscanf(response, "%s %s", command, status) < 2) {
         printf("ERROR: Failed to parse 'show_scoreboard' response\n");

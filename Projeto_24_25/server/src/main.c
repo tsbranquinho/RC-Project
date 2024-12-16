@@ -16,8 +16,11 @@ set settings = {0};
 int main(int argc, char *argv[]) {
 
     int GSport = DEFAULT_PORT;
-    int opt;
+    int opt, test=1;
     settings.verbose_mode = 0;
+    struct timeval timeout;
+    timeout.tv_sec = 10;
+    timeout.tv_usec = 0;
 
     signal(SIGINT, sig_detected);
 
@@ -50,6 +53,12 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    if (setsockopt(settings.tcp_socket, SOL_SOCKET, SO_REUSEADDR, &test, sizeof(test)) < 0) {
+        perror("Error setting socket timeout");
+        close(settings.tcp_socket);
+        return EXIT_FAILURE;
+    }
+
     struct sockaddr_in server_addr = {
         .sin_family = AF_INET,
         .sin_addr.s_addr = INADDR_ANY,
@@ -69,7 +78,7 @@ int main(int argc, char *argv[]) {
 
     printf("Game Server is running.\n");
 
-    int num_threads = sysconf(_SC_NPROCESSORS_ONLN) * 2;
+    int num_threads = 1;
     if (num_threads <= 0) num_threads = 4;
     printf("Number of threads: %d\n", num_threads);
 
@@ -84,9 +93,10 @@ int main(int argc, char *argv[]) {
     FD_SET(settings.tcp_socket, &read_fds);
     int max_fd = settings.udp_socket > settings.tcp_socket ? settings.udp_socket : settings.tcp_socket;
 
+
     while (1) {
         temp_fds = read_fds;
-        if (select(max_fd + 1, &temp_fds, NULL, NULL, NULL) < 0) {
+        if (select(max_fd + 1, &temp_fds, NULL, NULL, &timeout) < 0) { //TODO timeout
             perror("Select failed");
             continue;
         }
@@ -98,6 +108,7 @@ int main(int argc, char *argv[]) {
             socklen_t addr_len = sizeof(client_addr);
             ssize_t len = recvfrom(settings.udp_socket, buffer, sizeof(buffer) - 1, 0,
                                    (struct sockaddr *)&client_addr, &addr_len);
+            printf("Test buffer: %s\n", buffer);
             if (len > 0) {
                 buffer[len] = '\0';
                 Task task = {.client_addr = client_addr, .addr_len = addr_len, .is_tcp = 0};

@@ -54,21 +54,21 @@ int read_tcp_socket(int fd, char *buffer, size_t size) {
     memset(buffer, 0, size); // Initialize buffer
     size_t bytes_read = 0;
 
-    while (bytes_read < size - 1) {
-        ssize_t n = read(fd, buffer + bytes_read, size - bytes_read - 1);
-        if (n == 0) {
-            // Connection closed by the peer
-            break;
-        } else if (n < 0) {
+    while (size > 0) {
+        ssize_t bytes = read(fd, buffer + bytes_read, size);
+        printf("Bytes: %ld\n", bytes);
+        if (bytes < 0) {
+            //if (errno == ECONNRESET && buffer[bytes_read - 1] == '\n') {
+            //    printf("END\n");
+            //    break;
+            //}
             perror("ERROR: Failed to read from socket");
             return -1;
-        }
-        bytes_read += n;
-
-        // Stop if we detect a newline, indicating the end of the message
-        if (buffer[bytes_read - 1] == '\n') {
+        } else if (bytes == 0) {
             break;
         }
+        bytes_read += bytes;
+        size -= bytes;
     }
 
     buffer[bytes_read] = '\0'; // Null-terminate the response

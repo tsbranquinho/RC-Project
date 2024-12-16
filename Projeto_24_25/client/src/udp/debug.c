@@ -49,6 +49,7 @@ void debug_game(const char *plid, unsigned int time, const char *code) {
     snprintf(message, sizeof(message), "DBG %s %03d %s\n", plid, time, code); // Time padded to 3 digits
 
     char response[BUFFER_SIZE];
+    memset(response, 0, sizeof(response));
     printf("[DEBUG] Sending debug game request: %s", message);
 
     if (send_udp_skt(message, response, sizeof(response), GSIP, GSport) < 0) {
@@ -68,8 +69,10 @@ void receive_debug_msg(const char *plid, const char *response) {
     }
     if (strcmp(status, "OK") == 0) {
         printf("Debug game started successfully! You can begin playing.\n");
-        currPlayer = 1;
         currTries = 0;
+        currPlayer = 1;
+        setPLID = 0;
+        hasStarted = 1;
         strcpy(plidCurr, plid);
     } else if (strcmp(status, "NOK") == 0) {
         printf("Debug game not started: an ongoing game exists for this player.\n");

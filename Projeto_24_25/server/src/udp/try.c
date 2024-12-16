@@ -3,10 +3,21 @@
 #include "../../include/globals.h"
 
 void handle_try_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
-    char plid[ID_SIZE + 1];
+    char plid[ID_SIZE + 100];
     char aux_guess[2*MAX_COLORS]; // will be stored in check_try_err
     int trial_num;
-    int n_args = sscanf(request, "TRY %6s %[^0-9] %d", plid, aux_guess, &trial_num);
+    memset(plid, 0, sizeof(plid));
+    memset(aux_guess, 0, sizeof(aux_guess));
+    aux_guess[1] = ' ';
+    aux_guess[3] = ' ';
+    aux_guess[5] = ' ';
+    printf("[DEBUG] Received TRY request:%s\n", request);
+    int n_args = sscanf(request, "TRY %s %c %c %c %c %d", plid, &aux_guess[0], &aux_guess[2], &aux_guess[4], &aux_guess[6], &trial_num);
+    aux_guess[7] = '\0';
+    printf("[DEBUG] n_args: %d\n", n_args);
+    printf("[DEBUG] plid: %s\n", plid);
+    printf("[DEBUG] aux_guess: %s\n", aux_guess);
+    printf("[DEBUG] trial_num: %d\n", trial_num);
 
     // ERR firsts
     if (check_try_err(request, n_args, aux_guess, &trial_num) < 0) {
@@ -40,8 +51,7 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     // ETM
     if (check_try_etm(player, response) < 0) {
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
-        end_game(player);
-        mutex_unlock(plid_mutex);
+        end_game(player, plid_mutex);
         return;
     }
 
@@ -69,7 +79,7 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     }
 
     //ENT
-    if (check_try_ent(player, response) < 0) {
+    if (check_try_ent(player, response, plid_mutex) < 0) {
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
         mutex_unlock(plid_mutex);
         return;
@@ -94,11 +104,11 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         snprintf(response, sizeof(response), "RTR OK %d 4 0\n", trial_num);
         player->current_game->end_status = 'W';
         score_game(player);
-        end_game(player);
+        end_game(player, plid_mutex);
     } else {
         if (player->current_game->trial_count == MAX_TRIALS) {
             player->current_game->trial_count++; //Está errado e excedemos o limite de tentativas
-            if (check_try_ent(player, response) < 0) {
+            if (check_try_ent(player, response, plid_mutex) < 0) {
                 send_udp_response(response, client_addr, client_addr_len, udp_socket);
                 mutex_unlock(plid_mutex);
                 return;
@@ -112,7 +122,7 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
 }
 
 int check_try_err(const char *request, int n_args, char *aux_guess, int *trial_num) {
-    if (n_args != 3) {
+    if (n_args != 6) {
         return -1;
     }
 
@@ -185,14 +195,14 @@ int check_try_dup(Player *player, char *guess) {
     return 0;
 }
 
-int check_try_ent(Player *player, char* response) {
+int check_try_ent(Player *player, char* response, pthread_mutex_t *plid_mutex) {
     if (player->current_game->trial_count > MAX_TRIALS) {
         char temp[2*MAX_COLORS];
         convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
         printf("[DEBUG] temp: %s\n", temp);
         snprintf(response, BUFFER_SIZE, "RTR ENT %s\n", temp); //TODO corrigir isto, é temporário o fix
         player->current_game->end_status = 'F';
-        end_game(player);
+        end_game(player, plid_mutex);
         return -1;
     }
     return 0;

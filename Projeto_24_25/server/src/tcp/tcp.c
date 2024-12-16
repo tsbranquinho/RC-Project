@@ -2,17 +2,22 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
-void send_tcp_response(const char *message, int tcp_socket) {
-    ssize_t n, sum = 0;
-    while (sum != strlen(message)) {
-        n = write(tcp_socket, message, strlen(message));
-        if (n == -1) {
-            perror("Failed to send TCP message");
+void send_tcp_response(char *message, int tcp_socket) {
+    ssize_t n = strlen(message);
+    char* pointer = message;
+    while (n > 0) {
+        ssize_t bytes = write(tcp_socket, pointer, n);
+        if (bytes < 0) {
+            perror("ERROR: Failed to send message");
             return;
         }
-        sum += n;
+        n -= bytes;
+        pointer += bytes;
     }
+    shutdown(tcp_socket, SHUT_WR); // Indica que o servidor terminou de enviar dados
+    close(tcp_socket);
 }
+
 
 int read_tcp_socket(int fd, char *buffer, size_t size) {
     memset(buffer, 0, size); // Initialize buffer
@@ -29,10 +34,6 @@ int read_tcp_socket(int fd, char *buffer, size_t size) {
         }
         bytes_read += n;
 
-        // Stop if we detect a newline, indicating the end of the message
-        if (buffer[bytes_read - 1] == '\n') {
-            break;
-        }
     }
 
     buffer[bytes_read] = '\0'; // Null-terminate the response

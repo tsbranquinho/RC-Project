@@ -4,7 +4,7 @@
 
 void handle_scoreboard_request(int tcp_socket) {
     printf("[DEBUG] Received SCOREBOARD request\n");
-    char buffer[4096];
+    char buffer[2048];
     memset(buffer, 0, sizeof(buffer));
     FindTopScores(buffer);
     send_tcp_response(buffer, tcp_socket);
@@ -23,7 +23,9 @@ int FindTopScores(char* buffer) {
     char code[MAX_COLORS + 1];
     char notries[2];
     char temp_buffer[1024] = ""; // Inicializa temp_buffer vazio
-    int offset = 0; // Variável para controlar a posição atual no temp_buffer
+
+    char buffer1[128], fileinformation[4096], *offset;
+    offset = fileinformation;
 
     pthread_rwlock_rdlock(&scoreboard_lock);
 
@@ -31,7 +33,7 @@ int FindTopScores(char* buffer) {
     nentries = scandir("SCORES/", &filelist, 0, alphasort);
     printf("Number of entries: %d\n", nentries);
     if (nentries <= 2) { //TODO era isto certo branquinho?
-        snprintf(buffer, 11, "RSS EMPTY\n");
+        sprintf(buffer, "RSS EMPTY\n");
         pthread_rwlock_unlock(&scoreboard_lock);
         return 0;
     } else {
@@ -43,22 +45,12 @@ int FindTopScores(char* buffer) {
                 sprintf(fname, "SCORES/%s", filelist[nentries]->d_name);
                 fp = fopen(fname, "r");
                 if (fp != NULL) {
-                    fscanf(fp, "%s %s %s %s %s",
-                        score,
-                        plid,
-                        code,
-                        notries,
-                        mode);
+                    fscanf(fp, "%s %s %s %s %s", score, plid, code, notries, mode);
 
                     // Adiciona o texto no temp_buffer a partir da posição atual
-                    offset += snprintf(temp_buffer + offset, sizeof(temp_buffer) - offset,
-                        "%d - player %s: score = %s, code = %s, number of tries = %s, mode = %s\n",
-                        ifile + 1,
-                        plid,
-                        score,
-                        code,
-                        notries,
-                        mode);
+                    sprintf(buffer1, "%03d %s %s %s %s\n", atoi(score), plid, code, notries, mode);
+                    strcpy(offset, buffer1);
+                    offset += strlen(buffer1);
 
                     fclose(fp);
                     ++ifile;
@@ -71,7 +63,7 @@ int FindTopScores(char* buffer) {
 
     pthread_rwlock_unlock(&scoreboard_lock);
 
-    int filesize = strlen(temp_buffer);
+    int filesize = strlen(fileinformation);
 
     /* TODO em principio isto já não é necessário
     if (filesize == 0) {
@@ -79,8 +71,10 @@ int FindTopScores(char* buffer) {
         return 0;
     }
     */
-    snprintf(buffer, 4096, "RSS OK %s %d\n", filename, filesize);
-    strncat(buffer, temp_buffer, 4096 - strlen(buffer) - 1);
+
+   printf("fileinformation: .%s.\n", fileinformation);
+    sprintf(buffer, "RSS OK %s %d\n%s\n", filename, filesize, fileinformation);
+
 
     printf("buffer: %s\n", buffer);
     return 0;
