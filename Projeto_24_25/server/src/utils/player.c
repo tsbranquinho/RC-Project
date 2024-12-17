@@ -33,7 +33,6 @@ void cleanup_plid_mutex(const char *plid) {
 }
 
 Player *find_player(const char *plid) {
-    printf("Finding player with ID %s\n", plid);
     unsigned int index = hash(plid);
 
     pthread_rwlock_rdlock(&hash_table_lock);
@@ -74,6 +73,7 @@ void remove_player(const char *plid, pthread_mutex_t *plid_mutex) {
             pthread_rwlock_unlock(&hash_table_lock);
             mutex_unlock(plid_mutex); //TODO Mutex
             cleanup_plid_mutex(plid);
+            printf("Player with ID %s removed\n", plid);
             return;
         }
         prev = current;
@@ -81,7 +81,7 @@ void remove_player(const char *plid, pthread_mutex_t *plid_mutex) {
     }
 
     pthread_rwlock_unlock(&hash_table_lock);
-    printf("Player with ID %s not found\n", plid);
+    printf("Player with ID %s could not be removed\n", plid);
 }
 
 Player *create_player(const char *plid) {

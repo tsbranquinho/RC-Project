@@ -4,6 +4,7 @@
 
 void handle_trials_request(int tcp_socket) {
     //TODO mandar ficheiro alterado
+    //TODO close if time less than 0
 
     printf("[DEBUG] Received TRIALS request\n");
     char buffer[4096];
@@ -22,13 +23,10 @@ void handle_trials_request(int tcp_socket) {
     }
 
     plid[ID_SIZE] = '\0';
-    printf("[DEBUG] Received TRIALS request from %s\n", plid);
-    printf("plid: %s\n", plid);
     Player *player = find_player(plid);
 
     if (player == NULL) {
         if (FindLastGame(plid, buffer)) {
-            printf("Buffer: %s\n", buffer);
             send_tcp_response(buffer, tcp_socket);
         }
         else {
@@ -59,17 +57,44 @@ void handle_trials_request(int tcp_socket) {
     char* tempfilename = strrchr(filename, '/');
     tempfilename++;
     memset(buffer, 0, sizeof(buffer));
-    int filesize = 0;
-    fseek(file, 0, SEEK_END);
-    filesize = ftell(file);
-    rewind(file);
-    snprintf(buffer, sizeof(buffer), "RST ACT %s %d\n", tempfilename, filesize);
+    int filesize, last_trial_num, final_time, plid_num;
+    char *pointer = buffer;
+    char temp[2048];
+    char *temp_ptr = temp;
 
-    while (fgets(buffer + strlen(buffer), filesize + 1, file) != NULL) {
-        continue;
+    time_t current_time;
+    time(&current_time);
+    char trash[1024];
+    if (fgets(trash, 1024, file) == NULL) {
+        return;
     }
-    strncat(buffer, "\n", sizeof(buffer));
-    printf("buffer: %s\n", buffer);
+    char mode, code[5];
+    if (sscanf(trash, "%d %c %s %d\n", &plid_num, &mode, code, &final_time) != 4) {
+        send_tcp_response("RST ERR\n", tcp_socket);
+        fclose(file);
+        return;
+    }
+    char *last_num = strrchr(trash, ' ');
+    if (last_num == NULL) {
+        perror("strrchr");
+        send_tcp_response("RST ERR\n", tcp_socket);
+        fclose(file);
+        return;
+    }
+    last_trial_num = atoi(last_num + 1);
+    while (fgets(trash, 1024, file) != NULL) {
+        char c1, c2, c3, c4;
+        int trial_num, nb, nw, time;
+        if (sscanf(trash, "%d: %c%c%c%c %d %d %d\n", &trial_num, &c1, &c2, &c3, &c4, &nb, &nw, &time) != 8) {
+            continue;
+        }
+        temp_ptr += sprintf(temp_ptr, "%c %c %c %c %d %d\n", c1, c2, c3, c4, nb, nw);
+    }
+    temp_ptr += sprintf(temp_ptr, "Remaining time: %ld\n", last_trial_num + final_time - current_time);
+    temp_ptr += sprintf(temp_ptr, "\n");
+    filesize = strlen(temp);
+    sprintf(pointer, "RST ACT %s %d\n%s\n", tempfilename, filesize, temp);
+
     send_tcp_response(buffer, tcp_socket);
     fclose(file);
 
@@ -128,7 +153,6 @@ int FindLastGame(char *PLID, char *buffer) {
         continue;
     }
     strncat(buffer, "\n", BUFFER_SIZE);
-    printf("buffer: %s\n", buffer);
     fclose(file);
 
     return 1;

@@ -99,6 +99,7 @@ void handle_task(Task task) {
         else {
             //NOT SURE IF THIS IS THE RIGHT RESPONSE
             send_tcp_response("ERR\n", client_socket);
+            close(client_socket);
         }
         printf("[TCP] Connection closed\n");
 

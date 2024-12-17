@@ -5,7 +5,6 @@
 void handle_start_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
     char plid[ID_SIZE + 1];
     int max_time;
-    printf("Got a start request\n");
 
     if (sscanf(request, "SNG %6s %3d", plid, &max_time) != 2 || max_time <= 0 || max_time > MAX_PLAYTIME) {
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);

@@ -78,8 +78,8 @@ int main(int argc, char *argv[]) {
 
     printf("Game Server is running.\n");
 
-    int num_threads = 1;
-    if (num_threads <= 0) num_threads = 4;
+    int num_threads = sysconf(_SC_NPROCESSORS_ONLN) * 2;
+    if (num_threads <= 0) num_threads = 1;
     printf("Number of threads: %d\n", num_threads);
 
     pthread_t threads[num_threads];
@@ -102,13 +102,12 @@ int main(int argc, char *argv[]) {
         }
 
         if (FD_ISSET(settings.udp_socket, &temp_fds)) {
-            printf("udp\n");
             char buffer[1024];
             struct sockaddr_in client_addr;
             socklen_t addr_len = sizeof(client_addr);
             ssize_t len = recvfrom(settings.udp_socket, buffer, sizeof(buffer) - 1, 0,
                                    (struct sockaddr *)&client_addr, &addr_len);
-            printf("Test buffer: %s\n", buffer);
+            printf("Received UDP request: %s\n", buffer);
             if (len > 0) {
                 buffer[len] = '\0';
                 Task task = {.client_addr = client_addr, .addr_len = addr_len, .is_tcp = 0};
@@ -118,7 +117,6 @@ int main(int argc, char *argv[]) {
         }
 
         if (FD_ISSET(settings.tcp_socket, &temp_fds)) {
-            printf("here\n");
             struct sockaddr_in client_addr;
             socklen_t addr_len = sizeof(client_addr);
             int client_socket = accept(settings.tcp_socket, (struct sockaddr *)&client_addr, &addr_len);

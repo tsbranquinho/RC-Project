@@ -22,7 +22,6 @@ int FindTopScores(char* buffer) {
     char score[4];
     char code[MAX_COLORS + 1];
     char notries[2];
-    char temp_buffer[1024] = ""; // Inicializa temp_buffer vazio
 
     char buffer1[128], fileinformation[4096], *offset;
     offset = fileinformation;
@@ -31,7 +30,6 @@ int FindTopScores(char* buffer) {
 
     // Lê os arquivos do diretório SCORES/ e ordena alfabeticamente
     nentries = scandir("SCORES/", &filelist, 0, alphasort);
-    printf("Number of entries: %d\n", nentries);
     if (nentries <= 2) { //TODO era isto certo branquinho?
         sprintf(buffer, "RSS EMPTY\n");
         pthread_rwlock_unlock(&scoreboard_lock);
@@ -40,7 +38,6 @@ int FindTopScores(char* buffer) {
         ifile = 0;
         while (nentries--) {
             // Ignora arquivos ocultos e limita a 10 arquivos
-            printf("filelist[%d]->d_name: %s\n", nentries, filelist[nentries]->d_name);
             if (filelist[nentries]->d_name[0] != '.' && ifile < 10) {
                 sprintf(fname, "SCORES/%s", filelist[nentries]->d_name);
                 fp = fopen(fname, "r");
@@ -72,10 +69,8 @@ int FindTopScores(char* buffer) {
     }
     */
 
-   printf("fileinformation: .%s.\n", fileinformation);
     sprintf(buffer, "RSS OK %s %d\n%s\n", filename, filesize, fileinformation);
 
 
-    printf("buffer: %s\n", buffer);
     return 0;
 }

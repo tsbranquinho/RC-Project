@@ -12,7 +12,6 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
     memset(aux, 0, sizeof(aux));
 
     //TODO verificar se isto está bem
-    printf("DEBUG REQUEST: %s\n", request);
 
     if (sscanf(request, "DBG %6s %3d %c %c %c %c", plid, &max_time, &aux[0], &aux[1], &aux[2], &aux[3]) != 6 || max_time <= 0 || max_time > MAX_PLAYTIME) {
         send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);

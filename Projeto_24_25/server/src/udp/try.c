@@ -11,13 +11,8 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     aux_guess[1] = ' ';
     aux_guess[3] = ' ';
     aux_guess[5] = ' ';
-    printf("[DEBUG] Received TRY request:%s\n", request);
     int n_args = sscanf(request, "TRY %s %c %c %c %c %d", plid, &aux_guess[0], &aux_guess[2], &aux_guess[4], &aux_guess[6], &trial_num);
     aux_guess[7] = '\0';
-    printf("[DEBUG] n_args: %d\n", n_args);
-    printf("[DEBUG] plid: %s\n", plid);
-    printf("[DEBUG] aux_guess: %s\n", aux_guess);
-    printf("[DEBUG] trial_num: %d\n", trial_num);
 
     // ERR firsts
     if (check_try_err(request, n_args, aux_guess, &trial_num) < 0) {
@@ -153,7 +148,6 @@ int check_try_etm(Player *player, char* response) {
     if (time(&player->current_game->last_time) - player->current_game->start_time > player->current_game->max_time) {
         char temp[2*MAX_COLORS];
         convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
-        printf("[DEBUG] temp: %s\n", temp);
         snprintf(response, BUFFER_SIZE, "RTR ENT %s\n", temp); //TODO corrigir isto, é temporário o fix
         player->current_game->end_status = 'T';
         return -1;
@@ -185,8 +179,6 @@ int check_try_inv(Player *player, int trial_num, char *guess) {
 
 int check_try_dup(Player *player, char *guess) {
     for (Trials *trial = player->current_game->trial; trial != NULL; trial = trial->prev) {
-        printf("[DEBUG] trial->guess: %s\n", trial->guess);
-        printf("[DEBUG] guess: %s\n", guess);
         if (strcmp(trial->guess, guess) == 0) {
             player->current_game->trial_count--;
             return -1;
@@ -199,7 +191,6 @@ int check_try_ent(Player *player, char* response, pthread_mutex_t *plid_mutex) {
     if (player->current_game->trial_count > MAX_TRIALS) {
         char temp[2*MAX_COLORS];
         convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
-        printf("[DEBUG] temp: %s\n", temp);
         snprintf(response, BUFFER_SIZE, "RTR ENT %s\n", temp); //TODO corrigir isto, é temporário o fix
         player->current_game->end_status = 'F';
         end_game(player, plid_mutex);
@@ -209,8 +200,6 @@ int check_try_ent(Player *player, char* response, pthread_mutex_t *plid_mutex) {
 }
 
 int calculate_feedback(const char *guess, const char *secret, int *black, int *white) {
-    printf("Guess: %s\n", guess);
-    printf("Secret: %s\n", secret);
 
     int guess_count[MAX_COLORS] = {0};  // Array for counting occurrences of each color in the guess
     int secret_count[MAX_COLORS] = {0}; // Array for counting occurrences of each color in the secret
