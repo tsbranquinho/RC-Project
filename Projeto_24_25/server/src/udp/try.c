@@ -148,7 +148,7 @@ int check_try_etm(Player *player, char* response) {
     if (time(&player->current_game->last_time) - player->current_game->start_time > player->current_game->max_time) {
         char temp[2*MAX_COLORS];
         convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
-        snprintf(response, BUFFER_SIZE, "RTR ENT %s\n", temp); //TODO corrigir isto, é temporário o fix
+        snprintf(response, BUFFER_SIZE, "RTR ETM %s\n", temp); //TODO corrigir isto, é temporário o fix
         player->current_game->end_status = 'T';
         return -1;
     }
@@ -249,8 +249,8 @@ int write_try_to_file(Player *player, char *guess, int black, int white) {
     }
     char buffer[128];
     memset(buffer, 0, sizeof(buffer));
-    snprintf(buffer, sizeof(buffer), "%d: %s %d %d %ld\n",
-            player->current_game->trial_count, guess, black, white, player->current_game->last_time - player->current_game->start_time);
+    snprintf(buffer, sizeof(buffer), "T: %s %d %d %ld\n",
+            guess, black, white, player->current_game->last_time - player->current_game->start_time);
     if (fwrite(buffer, 1, strlen(buffer), fp) != strlen(buffer)) {
         perror("Error writing to file");
         fclose(fp);

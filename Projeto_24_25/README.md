@@ -42,3 +42,7 @@ To test the commands, run `./player -n 193.136.138.142 -p 58011`
 - hint
 
 --set PLID done, try dynamic formatting done, debug done
+
+ssh sigma.ist.utl.pt -l ist1106635
+scp -r  Projeto_24_25/ ist1106635@sigma.tecnico.ulisboa.pt:~/Branquinho2
+echo "193.136.128.108 58067 10" | tr -d '\r' | nc tejo.tecnico.ulisboa.pt 59000 > reports/report10.html

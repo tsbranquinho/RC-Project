@@ -54,8 +54,8 @@ void handle_trials_request(int tcp_socket) {
         return;
     }
 
-    char* tempfilename = strrchr(filename, '/');
-    tempfilename++;
+    char tempfilename[128];
+    sprintf(tempfilename, "STATE_%s.txt", player->plid);
     memset(buffer, 0, sizeof(buffer));
     int filesize, last_trial_num, final_time, plid_num;
     char *pointer = buffer;
@@ -84,16 +84,17 @@ void handle_trials_request(int tcp_socket) {
     last_trial_num = atoi(last_num + 1);
     while (fgets(trash, 1024, file) != NULL) {
         char c1, c2, c3, c4;
-        int trial_num, nb, nw, time;
-        if (sscanf(trash, "%d: %c%c%c%c %d %d %d\n", &trial_num, &c1, &c2, &c3, &c4, &nb, &nw, &time) != 8) {
+        int nb, nw, time;
+        printf("Trash: %s\n", trash);
+        if (sscanf(trash, "T: %c%c%c%c %d %d %d\n", &c1, &c2, &c3, &c4, &nb, &nw, &time) != 7) {
             continue;
         }
+        printf("C1: %c, C2: %c, C3: %c, C4: %c, NB: %d, NW: %d, TIME: %d\n", c1, c2, c3, c4, nb, nw, time);
         temp_ptr += sprintf(temp_ptr, "%c %c %c %c %d %d\n", c1, c2, c3, c4, nb, nw);
     }
-    temp_ptr += sprintf(temp_ptr, "Remaining time: %ld\n", last_trial_num + final_time - current_time);
-    temp_ptr += sprintf(temp_ptr, "\n");
-    filesize = strlen(temp);
-    sprintf(pointer, "RST ACT %s %d\n%s\n", tempfilename, filesize, temp);
+    temp_ptr += sprintf(temp_ptr, "%ld", last_trial_num + final_time - current_time);
+    filesize = strlen(temp) + 1;
+    sprintf(pointer, "RST ACT %s %d %s\n\n", tempfilename, filesize, temp);
 
     send_tcp_response(buffer, tcp_socket);
     fclose(file);
@@ -147,7 +148,7 @@ int FindLastGame(char *PLID, char *buffer) {
     fseek(file, 0, SEEK_END);
     filesize = ftell(file);
     rewind(file);
-    snprintf(buffer, BUFFER_SIZE, "RST FIN %s %d\n", strrchr(latest_file, '/') + 1, filesize);
+    snprintf(buffer, BUFFER_SIZE, "RST FIN %s %d ", strrchr(latest_file, '/') + 1, filesize+1);
 
     while (fgets(buffer + strlen(buffer), filesize + 1, file) != NULL) {
         continue;

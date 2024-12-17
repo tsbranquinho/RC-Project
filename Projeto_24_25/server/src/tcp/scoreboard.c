@@ -69,7 +69,7 @@ int FindTopScores(char* buffer) {
     }
     */
 
-    sprintf(buffer, "RSS OK %s %d\n%s\n", filename, filesize, fileinformation);
+    sprintf(buffer, "RSS OK %s %d %s\n", filename, filesize, fileinformation);
 
 
     return 0;

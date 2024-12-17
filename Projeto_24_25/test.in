@@ -1,0 +1,7 @@
+debug 100000 555 Y Y Y Y
+try Y Y Y O
+st
+try Y Y Y Y
+st
+sb
+exit

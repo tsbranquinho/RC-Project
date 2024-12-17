@@ -1,0 +1,54 @@
+Starting Game Server on port: 58067
+Game Server is running.
+Number of threads: 16
+Received UDP request: DBG 100000 555 Y Y Y Y
+
+Player with ID 100000 not found
+Sending UDP response: RDB OK
+
+Received UDP request: TRY 100000 Y Y Y O 1
+Y
+
+Player with ID 100000 found
+Sending UDP response: RTR OK 1 3 0
+
+[DEBUG] Received message: STR
+[DEBUG] Received TRIALS request
+[DEBUG] Received message:  100000
+Player with ID 100000 found
+Trash: T: YYYO 3 0 0
+
+C1: Y, C2: Y, C3: Y, C4: O, NB: 3, NW: 0, TIME: 0
+Sending message: RST ACT STATE_100000.txt 16
+Y Y Y O 3 0
+555
+
+Now the ASCII:
+82 83 84 32 65 67 84 32 83 84 65 84 69 95 49 48 48 48 48 48 46 116 120 116 32 49 54 10 89 32 89 32 89 32 79 32 51 32 48 10 53 53 53 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 [TCP] Connection closed
+Received UDP request: TRY 100000 Y Y Y Y 2
+
+Player with ID 100000 found
+Player with ID  removed
+Sending UDP response: RTR OK 2 4 0
+
+[DEBUG] Received message: STR
+[DEBUG] Received TRIALS request
+[DEBUG] Received message:  100000
+Player with ID 100000 not found
+Sending message: RST FIN 20241217_161356_W.txt 100
+100000 D YYYY 555 2024-12-17 16:13:56 1734452036
+T: YYYO 3 0 0
+T: YYYY 4 0 0
+2024-12-17 16:13:56 0
+
+
+Now the ASCII:
+82 83 84 32 70 73 78 32 50 48 50 52 49 50 49 55 95 49 54 49 51 53 54 95 87 46 116 120 116 32 49 48 48 10 49 48 48 48 48 48 32 68 32 89 89 89 89 32 53 53 53 32 50 48 50 52 45 49 50 45 49 55 32 49 54 58 49 51 58 53 54 32 49 55 51 52 52 53 50 48 51 54 10 84 58 32 89 89 89 79 32 51 32 48 32 48 10 84 58 32 89 89 89 89 32 52 32 48 32 48 10 50 48 50 52 45 49 50 45 49 55 32 49 54 58 49 51 58 53 54 32 48 10 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 [TCP] Connection closed
+[DEBUG] Received message: SSB
+[DEBUG] Received SCOREBOARD request
+Sending message: RSS OK scores.txt 24
+00 100000 YYYY 2 DEBUG
+
+
+Now the ASCII:
+82 83 83 32 79 75 32 115 99 111 114 101 115 46 116 120 116 32 50 52 10 48 48 32 49 48 48 48 48 48 32 89 89 89 89 32 50 32 68 69 66 85 71 10 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 [TCP] Connection closed
