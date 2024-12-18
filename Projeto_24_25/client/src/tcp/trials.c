@@ -3,7 +3,6 @@
 #include "../../include/globals.h"
 
 int handle_show_trials(const char *input) {
-    //TODO verificar PLID
     if (strcmp(input, "st") != 0 && strcmp(input, "show_trials") != 0) {
         return invalid_command_format(CMD_SHOW_TRIALS);
     }
@@ -23,10 +22,10 @@ int handle_show_trials(const char *input) {
 }
 
 void send_show_trials_msg(int fd) {
-    char message[BUFFER_SIZE];
+    char message[SMALL_BUFFER];
     snprintf(message, sizeof(message), "STR %s\n", plidCurr);
 
-    if (send_tcp_message(fd, message) == -1) {
+    if (send_tcp_message(fd, message) == ERROR) {
         fprintf(stderr, "ERROR: Failed to send 'show_trials' message\n");
     }
 
@@ -34,15 +33,15 @@ void send_show_trials_msg(int fd) {
 }
 
 void receive_show_trials_msg(int fd) {
-    char response[4096];
-    char status[4];
-    char command[4];
+    char response[GLOBAL_BUFFER];
+    char status[STATUS -2];
+    char command[COMMAND];
 
-    char filename[1024]; //TODO not sure o tamanho que ponho
+    char filename[FILENAME_SIZE];
     int file_size;
     char *file_data = NULL;
 
-    if (read_tcp_socket(fd, response, sizeof(response)) == -1) {
+    if (read_tcp_socket(fd, response, sizeof(response)) == ERROR) {
         printf("Response: %s\n", response);
         printf("ERROR: Failed to receive 'show_trials' response\n");
         return;
@@ -59,40 +58,42 @@ void receive_show_trials_msg(int fd) {
 
     if (strcmp(status, "ACT") == 0 || strcmp(status, "FIN") == 0) {
         if (sscanf(response + strlen(command) + strlen(status) + 2, "%s %d\n", filename, &file_size) >= 1) {
+            
+            if(file_size > FSIZE) {
+                printf("ERROR: File size too big\n");
+                return;
+            }
+
+            if(strlen(filename) > 24) {
+                filename[24] = '\0';
+            }
+
             printf("Filename: %s, File size: %d\n", filename, file_size);
 
-            // A parte após o '\n' no response contém os dados do arquivo
-            char *file_data_start = strchr(response, '\n');  // Procurar o primeiro '\n'
+            char *file_data_start = strpbrk(response, "\n ");
             if (file_data_start != NULL) {
-                file_data_start++; // Mover para o próximo caractere após o '\n'
+                file_data_start++;
 
-                // Alocar memória para armazenar os dados do arquivo
-                file_data = malloc(file_size + 1); // +1 para o terminador nulo
+                file_data = malloc(file_size + 1);
                 if (!file_data) {
                     printf("ERROR: Memory allocation failed\n");
                     return;
                 }
 
-                // Copiar os dados do arquivo para o buffer
                 strncpy(file_data, file_data_start, file_size);
-                file_data[file_size] = '\0'; // Garantir que os dados do arquivo sejam uma string válida
+                file_data[file_size] = '\0';
 
-                // Agora podemos salvar o arquivo
                 FILE *fp = fopen(filename, "w");
                 if (!fp) {
                     perror("Error saving file");
-                    free(file_data); // Liberar a memória
+                    free(file_data);
                     return;
                 }
 
-                // Salvar os dados do arquivo
+                printf("%s\n", file_data_start);
+
                 fwrite(file_data, 1, file_size, fp);
                 fclose(fp);
-
-                printf("Trials saved to '%s'.\n", filename);
-                printf("Game Summary:\n%s\n", file_data);
-
-                // Liberar a memória alocada para os dados do arquivo
                 free(file_data);
             }
             else {

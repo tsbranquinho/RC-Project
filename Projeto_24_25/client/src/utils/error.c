@@ -17,11 +17,11 @@ int errorCurrentPlayer(const char *plid) {
 void sig_detected(int sig) {
     if (currPlayer) {
         printf("Game interrupted. Exiting...\n");
-        //exit_game(); //TODO só no final podemos tirar isto senão semrpe que fizermos ctrl c o server tem estar ligado e o crlh
+        exit_game();
         exit(0);
     } else {
         printf("Exiting...\n");
-        //exit_game();    //TODO só no final podemos tirar isto senão semrpe que fizermos ctrl c o server tem estar ligado e o crlh
+        exit_game();
         exit(0);
     }
 }
@@ -69,7 +69,7 @@ void invalid_playtime(unsigned int time) {
 
 void invalid_code(int mode) {
     if (mode == LENGTH) {
-        fprintf(stderr, "Invalid code length. It must be exactly 7 characters.\n"); //TODO devemos ser mais permissivos
+        fprintf(stderr, "Invalid code length. It must be exactly 7 characters.\n");
     } else if (mode == COLOR) {
         fprintf(stderr, "Invalid color code. Use only R, G, B, Y, O, or P.\n");
     } else if (mode == SPACE) {

@@ -27,24 +27,22 @@ void start_game(const char *plid, unsigned int time) {
         return invalid_playtime(time);
     }
 
-    char message[BUFFER_SIZE];
+    char message[SMALL_BUFFER];
     memset(message, 0, sizeof(message));
     snprintf(message, sizeof(message), "SNG %s %03d\n", plid, time);
 
-    char response[BUFFER_SIZE];
+    char response[SMALL_BUFFER];
     memset(response, 0, sizeof(response));
-    printf("[DEBUG] Sending start game request: %s", message); // Debug log
 
     if (send_udp_skt(message, response, sizeof(response), GSIP, GSport) < 0) {
         return error_communicating_with_server(EMPTY);
     }
 
-    printf("[DEBUG] Received response: %s", response); // Debug log
     receive_start_msg(response, plid);
 }
 
 void receive_start_msg(const char *response, const char *plid) {
-    char status[BUFFER_SIZE];
+    char status[SMALL_BUFFER];
     memset(status, 0, sizeof(status));
     if (sscanf(response, "RSG %s", status) != 1) {
         return error_communicating_with_server(response);

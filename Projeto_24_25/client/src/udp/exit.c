@@ -12,7 +12,6 @@ int handle_exit(const char *input) {
 }
 
 void exit_game() {
-    // If the player is playing, quit the game
     if (currPlayer && hasStarted) {
         quit_game();
     }

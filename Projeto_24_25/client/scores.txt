@@ -1,2 +1,1 @@
-00 100000 YYYY 2 DEBUG
-
+OK scores.txt 23 999 10

@@ -14,10 +14,11 @@ int handle_try(const char *input) {
 
 void try_code(const char *code) {
     char trimmed_code[2*MAX_COLORS];
-    printf("Code: %s\n", code);
     memset(trimmed_code, 0, sizeof(trimmed_code));
     snprintf(trimmed_code, sizeof(trimmed_code), "%s", code);
+
     trimmed_code[2*MAX_COLORS-1] = '\0';
+
     if (currPlayer == 0) {
         return error_no_game(CMD_TRY);
     }
@@ -35,19 +36,17 @@ void try_code(const char *code) {
         }
     }
 
-    char message[BUFFER_SIZE];
+    char message[SMALL_BUFFER];
     memset(message, 0, sizeof(message));
     snprintf(message, sizeof(message), "TRY %s %s %d\n",plidCurr, trimmed_code, currTries+1);
 
-    char response[BUFFER_SIZE];
+    char response[SMALL_BUFFER];
     memset(response, 0, sizeof(response));
-    printf("[DEBUG] Sending try request: %s", message);
 
     if (send_udp_skt(message, response, sizeof(response), GSIP, GSport) < 0) {
         return error_communicating_with_server(EMPTY);
     }
 
-    printf("[DEBUG] Received response: %s", response);
     receive_try_msg(response);
 }
 
@@ -60,25 +59,25 @@ void receive_try_msg(const char *response) {
     memset(status, 0, sizeof(status));
     memset(code, 0, sizeof(code));
 
-    //TODO tornar isto bonito
     if (sscanf(response, "RTR %s", status) < 1) {
         return error_communicating_with_server(response);
     }
-    printf("check\n");
-    printf("status: %s\n", status);
+
     if (strcmp("OK", status) == 0) {
         if (sscanf(response + 4 + 3, "%d %d %d", &tries, &black, &white) < 3) {
             return error_communicating_with_server(response);
         }
         currTries = tries;
+
         printf("Tries: %d, Black: %d, White: %d\n", currTries, black, white);
 
         if (black == MAX_COLORS) {
             printf("Congratulations! You've cracked the secret code.\n");
-            //end_game();
+
             currTries = 0;
             hasStarted = 0;
         }
+
     } else if (strcmp("DUP", status) == 0) {
         printf("Duplicate code entered. Try a different combination.\n");
     } else if (strcmp("INV", status) == 0) {
@@ -92,14 +91,13 @@ void receive_try_msg(const char *response) {
             return error_communicating_with_server(response);
         }
         printf("No more attempts left. You lose! The secret code was: %s\n", code);
-        //end_game();
         currTries = 0;
+
     } else if (strcmp("ETM", status) == 0) {
         if (sscanf(response + 4 + 4, "%[^\n]", code) < 1) {
             return error_communicating_with_server(response);
         }
         printf("Time limit exceeded. You lose! The secret code was: %s\n", code);
-        //end_game();
         currTries = 0;
     } else {
         return error_communicating_with_server(response);

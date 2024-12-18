@@ -2,11 +2,11 @@
 #include "../include/prototypes.h"
 #include "../include/globals.h"
 
-char*GSIP = DEFAULT_IP;                  // Default IP
-int GSport = DEFAULT_PORT;               // Default port
-int currPlayer = 0;                      // Flag to check if a player is playing or not
-int currTries = 0;                       // Number of tries of the current player (it starts with the "1st try")
-char plidCurr[ID_SIZE + 1];              // Current player ID
+char*GSIP = DEFAULT_IP;
+int GSport = DEFAULT_PORT;
+int currPlayer = 0;
+int currTries = 0;
+char plidCurr[ID_SIZE + 1];
 int setPLID = 0;
 int hasStarted = 0;
 struct addrinfo *res;
@@ -20,7 +20,6 @@ int main(int argc, char *argv[]) {
     int status;
 
     while (1) {
-        printf("Enter command: ");
         char input[MAX_COMMAND_SIZE];
         memset(input, 0, sizeof(input));
         
@@ -33,7 +32,7 @@ int main(int argc, char *argv[]) {
 
         Command cmd = get_next_command(input);
 
-        status = handle_command(cmd, input); //don't know if we need this but for now let's go
+        status = handle_command(cmd, input);
         if (status == EXIT_COMMAND) {
             return 0;
         }

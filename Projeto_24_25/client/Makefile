@@ -14,7 +14,6 @@ SRCS = $(SRC_DIR)/main.c \
        $(COMMON_DIR)/common.c
 OBJS = $(SRCS:.c=.o)
 
-# Final executable
 EXEC = ./player
 
 all: $(EXEC) 

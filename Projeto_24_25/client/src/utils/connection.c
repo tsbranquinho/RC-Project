@@ -4,11 +4,11 @@
 
 void resolve_hostname(const char *hostname) {
     struct addrinfo hints;
-    char ipstr[INET_ADDRSTRLEN]; // Buffer for IPv4 string representation
+    char ipstr[INET_ADDRSTRLEN];
 
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;  // IPv4 only
-    hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
 
     if (getaddrinfo(hostname, NULL, &hints, &res) != 0) {
         fprintf(stderr, "Error: Unable to resolve hostname '%s'\n", hostname);
@@ -18,7 +18,7 @@ void resolve_hostname(const char *hostname) {
     struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
     inet_ntop(AF_INET, &(ipv4->sin_addr), ipstr, sizeof(ipstr));
 
-    GSIP = strdup(ipstr); // Save the resolved IP address
+    GSIP = strdup(ipstr);
     freeaddrinfo(res);
 }
 
@@ -30,7 +30,7 @@ void get_arguments(int argc, char *argv[]) {
                 if (ip_set) {
                     usage(argv[0]);
                 }
-                resolve_hostname(optarg); // Resolve the hostname to an IP
+                resolve_hostname(optarg);
                 ip_set = 1;
                 break;
 
@@ -58,9 +58,6 @@ void get_arguments(int argc, char *argv[]) {
     if (!ip_set || !port_set) {
         usage(argv[0]);
     }
-
-    printf("Game Server IP: %s\n", GSIP);
-    printf("Game Server Port: %d\n", GSport);
 }
 
 int is_valid_ip(const char *ip) {

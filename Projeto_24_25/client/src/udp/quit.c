@@ -16,24 +16,22 @@ void quit_game() {
         return error_no_game(CMD_QUIT);
     }
 
-    char message[BUFFER_SIZE];
+    char message[SMALL_BUFFER];
     memset(message, 0, sizeof(message));
     snprintf(message, sizeof(message), "QUT %s\n", plidCurr);
 
-    char response[BUFFER_SIZE];
+    char response[SMALL_BUFFER];
     memset(response, 0, sizeof(response));
-    printf("[DEBUG] Sending quit request: %s", message); // Debug log
 
     if (send_udp_skt(message, response, sizeof(response), GSIP, GSport) < 0) {
         return error_communicating_with_server(EMPTY);
     }
 
-    printf("[DEBUG] Received response: %s", response); // Debug log
     receive_quit_msg(response);
 }
 
 void receive_quit_msg(const char *response) {
-    char status[BUFFER_SIZE];
+    char status[SMALL_BUFFER];
     memset(status, 0, sizeof(status));
     char secret_code[2*MAX_COLORS];
     memset(secret_code, 0, sizeof(secret_code));
@@ -61,6 +59,4 @@ void end_game() {
     currPlayer = 0;
     currTries = 0;
     plidCurr[0] = '\0';
-    // temos que dar flush do que tiver nos buffers
-    //TODO
 }

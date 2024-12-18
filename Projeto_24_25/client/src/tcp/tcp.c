@@ -13,23 +13,23 @@ int connect_to_server(struct addrinfo **res) {
     char port_str[6];
     snprintf(port_str, sizeof(port_str), "%d", GSport);
 
-    if (getaddrinfo(GSIP, port_str, &hints, res) != 0) {
+    if (getaddrinfo(GSIP, port_str, &hints, res) != SUCCESS) {
         perror("ERROR: Failed to resolve server address");
         return -1;
     }
 
     sockfd = socket((*res)->ai_family, (*res)->ai_socktype, (*res)->ai_protocol);
-    if (sockfd == -1) {
+    if (sockfd == ERROR) {
         perror("ERROR: Failed to create socket");
         freeaddrinfo(*res);
-        return -1;
+        return ERROR;
     }
 
-    if (connect(sockfd, (*res)->ai_addr, (*res)->ai_addrlen) == -1) {
+    if (connect(sockfd, (*res)->ai_addr, (*res)->ai_addrlen) == ERROR) {
         perror("ERROR: Connect to server failed");
         close(sockfd);
         freeaddrinfo(*res);
-        return -1;
+        return ERROR;
     }
 
     return sockfd;
@@ -43,34 +43,31 @@ int send_tcp_message(int fd, const char *message) {
         ssize_t bytes_written = write(fd, message + total_written, message_length - total_written);
         if (bytes_written < 0) {
             perror("ERROR: Failed to send message");
-            return -1;
+            return ERROR;
         }
         total_written += bytes_written;
     }
-    return 0;
+    return SUCCESS;
 }
 
 int read_tcp_socket(int fd, char *buffer, size_t size) {
-    memset(buffer, 0, size); // Initialize buffer
     size_t bytes_read = 0;
+    memset(buffer, 0, size);
 
-    while (size > 0) {
-        ssize_t bytes = read(fd, buffer + bytes_read, size);
-        printf("Bytes: %ld\n", bytes);
-        if (bytes < 0) {
-            //if (errno == ECONNRESET && buffer[bytes_read - 1] == '\n') {
-            //    printf("END\n");
-            //    break;
-            //}
-            perror("ERROR: Failed to read from socket");
-            return -1;
-        } else if (bytes == 0) {
+    while (bytes_read < size) {
+        ssize_t bytes = read(fd, buffer + bytes_read, size - bytes_read);
+
+        if (bytes == 0) {
             break;
         }
+        if (bytes < 0) {
+            perror("ERROR: Failed to read from socket");
+            return -1;
+        }
+        
         bytes_read += bytes;
-        size -= bytes;
     }
 
-    buffer[bytes_read] = '\0'; // Null-terminate the response
-    return 0;
+    buffer[bytes_read] = '\0';
+    return bytes_read;
 }

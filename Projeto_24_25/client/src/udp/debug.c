@@ -9,7 +9,6 @@ int handle_debug(const char *input) {
     memset(plid, 0, sizeof(plid));
     memset(code, 0, sizeof(code));
 
-    //TODO verificar se isto está bem
     if (sscanf(input, "debug %s %u %[^\n]", plid, &max_playtime, code) != 3) {
         return invalid_command_format(CMD_DEBUG);
     }
@@ -44,31 +43,28 @@ void debug_game(const char *plid, unsigned int time, const char *code) {
         }
     }
 
-    char message[BUFFER_SIZE];
+    char message[SMALL_BUFFER];
     memset(message, 0, sizeof(message));
-    snprintf(message, sizeof(message), "DBG %s %03d %s\n", plid, time, code); // Time padded to 3 digits
+    snprintf(message, sizeof(message), "DBG %s %03d %s\n", plid, time, code);
 
-    char response[BUFFER_SIZE];
+    char response[SMALL_BUFFER];
     memset(response, 0, sizeof(response));
-    printf("[DEBUG] Sending debug game request: %s", message);
 
     if (send_udp_skt(message, response, sizeof(response), GSIP, GSport) < 0) {
         return error_communicating_with_server(EMPTY);
     }
 
-    printf("[DEBUG] Received response: %s", response);
     receive_debug_msg(plid, response);
 }
 
 void receive_debug_msg(const char *plid, const char *response) {
-    char status[BUFFER_SIZE];
+    char status[SMALL_BUFFER];
     memset(status, 0, sizeof(status));
 
     if (sscanf(response, "RDB %s", status) != 1) {
         return error_communicating_with_server(response);
     }
     if (strcmp(status, "OK") == 0) {
-        printf("Debug game started successfully! You can begin playing.\n");
         currTries = 0;
         currPlayer = 1;
         setPLID = 0;
