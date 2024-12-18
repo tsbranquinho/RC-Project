@@ -87,7 +87,6 @@ void handle_task(Task task) {
             char client_ip[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
             printf("Received message from %s:%d\n", client_ip, ntohs(client_addr.sin_port));
-            printf("Message: %s\n", buffer);
         }
 
         if (strcmp(buffer, "STR") == 0) {
@@ -112,7 +111,6 @@ void handle_task(Task task) {
             char client_ip[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
             printf("Received message from %s:%d\n", client_ip, ntohs(client_addr.sin_port));
-            printf("Message: %s\n", buffer);
         }
 
         if (strncmp(buffer, "SNG", 3) == 0) {

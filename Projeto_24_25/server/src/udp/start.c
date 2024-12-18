@@ -7,8 +7,25 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
     int max_time;
 
     if (sscanf(request, "SNG %6s %3d", plid, &max_time) != 2 || max_time <= 0 || max_time > MAX_PLAYTIME) {
+        if (settings.verbose_mode) {
+            printf("Message: %s\n", request);
+            printf(stderr, "Invalid start request\n");
+        }
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
         return;
+    }
+
+    if (!valid_plid(plid)) {
+        if (settings.verbose_mode) {
+            printf("Invalid plid\n");
+        }
+        send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
+        return;
+    }
+    
+    if(settings.verbose_mode) {
+        printf("PLID: %s\n", plid);
+        printf("Max time: %d\n", max_time);
     }
 
     Player *player = find_player(plid);

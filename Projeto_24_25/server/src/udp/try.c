@@ -14,10 +14,20 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     int n_args = sscanf(request, "TRY %s %c %c %c %c %d", plid, &aux_guess[0], &aux_guess[2], &aux_guess[4], &aux_guess[6], &trial_num);
     aux_guess[7] = '\0';
 
-    // ERR firsts
+
     if (check_try_err(request, n_args, aux_guess, &trial_num) < 0) {
+        if(settings.verbose_mode) {
+            printf("Message: %s\n", request);
+            printf(stderr, "Invalid try request\n");
+        }
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         return;
+    }
+
+    if(settings.verbose_mode) {
+        printf("PLID: %s\n", plid);
+        printf("Trial number: %d\n", trial_num);
+        printf("Guess: %s\n", aux_guess);
     }
 
     char guess[MAX_COLORS + 1];

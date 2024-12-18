@@ -14,8 +14,32 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
     //TODO verificar se isto está bem
 
     if (sscanf(request, "DBG %6s %3d %c %c %c %c", plid, &max_time, &aux[0], &aux[1], &aux[2], &aux[3]) != 6 || max_time <= 0 || max_time > MAX_PLAYTIME) {
+        if(settings.verbose_mode) {
+            printf("%s\n", request);
+            printf(stderr, "Invalid request\n");
+        }
         send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
         return;
+    }
+
+    if(!valid_key(aux)) {
+        if(settings.verbose_mode) {
+            printf("Invalid key\n");
+        }
+        send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
+        return;
+    }
+
+    if(!valid_plid(plid)) {
+        if(settings.verbose_mode) {
+            printf("Invalid plid\n");
+        }
+        send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
+        return;
+    }
+    
+    if(settings.verbose_mode) {
+        printf("DBG %s %d %s\n", plid, max_time, aux);
     }
 
     aux[MAX_COLORS] = '\0';

@@ -7,6 +7,11 @@ void handle_scoreboard_request(int tcp_socket) {
     char buffer[2048];
     memset(buffer, 0, sizeof(buffer));
     FindTopScores(buffer);
+
+    if(settings.verbose_mode) {
+        printf("ScoreBoard Request.\n");
+    }
+
     send_tcp_response(buffer, tcp_socket);
 }
 

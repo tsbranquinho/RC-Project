@@ -17,11 +17,17 @@ void handle_trials_request(int tcp_socket) {
     printf("[DEBUG] Received message: %s\n", buffer);
 
     if (is_number(plid) == FALSE || sscanf(buffer, "%6s", plid) != 1) {
-        //TODO send ERR
+        if(settings.verbose_mode) {
+            printf("Invalid TRIALS request\n");
+        }
         send_tcp_response("ERR\n", tcp_socket);
         return;
     }
 
+    if(settings.verbose_mode) {
+        printf("TRIALS request from %s\n", plid);
+    }
+    
     plid[ID_SIZE] = '\0';
     Player *player = find_player(plid);
 

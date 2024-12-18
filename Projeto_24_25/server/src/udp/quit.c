@@ -6,6 +6,23 @@ void handle_quit_request(const char *request, struct sockaddr_in *client_addr, s
     char plid[ID_SIZE + 1];
 
     if (sscanf(request, "QUT %6s", plid) != 1) {
+        
+        if(settings.verbose_mode) {
+            printf("%s\n", request);
+            printf("Received invalid QUT request\n");
+        }
+        send_udp_response("RQT ERR\n", client_addr, client_addr_len, udp_socket);
+        return;
+    }
+
+    if(settings.verbose_mode) {
+        printf("Received QUT request from %s\n", plid);
+    }
+
+    if(!valid_plid(plid)) {
+        if(settings.verbose_mode) {
+            printf("Invalid plid\n");
+        }
         send_udp_response("RQT ERR\n", client_addr, client_addr_len, udp_socket);
         return;
     }
