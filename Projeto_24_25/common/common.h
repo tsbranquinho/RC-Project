@@ -17,6 +17,11 @@
 #define EXIT_COMMAND 2
 #define EMPTY " "
 #define MAX_STATUS_SIZE 4
+#define GLOBAL_BUFFER 2048          // Global buffer size
+#define SMALL_BUFFER 256            // Small buffer size
+#define FILENAME_SIZE 128           // Size of the filename (a little bigger than needed)
+#define FSIZE 1024                  // Size of the file
+
 
 int is_number(const char *str);
 int color_to_index(char color);

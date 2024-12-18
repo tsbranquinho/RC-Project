@@ -41,7 +41,7 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
 
     player->current_game->trial_count++;
     int black = 0, white = 0;
-    char response[BUFFER_SIZE];
+    char response[SMALL_BUFFER];
 
     // ETM
     if (check_try_etm(player, response) < 0) {
@@ -148,7 +148,7 @@ int check_try_etm(Player *player, char* response) {
     if (time(&player->current_game->last_time) - player->current_game->start_time > player->current_game->max_time) {
         char temp[2*MAX_COLORS];
         convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
-        snprintf(response, BUFFER_SIZE, "RTR ETM %s\n", temp); //TODO corrigir isto, é temporário o fix
+        snprintf(response, SMALL_BUFFER, "RTR ETM %s\n", temp); //TODO corrigir isto, é temporário o fix
         player->current_game->end_status = 'T';
         return -1;
     }
@@ -191,7 +191,7 @@ int check_try_ent(Player *player, char* response, pthread_mutex_t *plid_mutex) {
     if (player->current_game->trial_count > MAX_TRIALS) {
         char temp[2*MAX_COLORS];
         convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
-        snprintf(response, BUFFER_SIZE, "RTR ENT %s\n", temp); //TODO corrigir isto, é temporário o fix
+        snprintf(response, SMALL_BUFFER, "RTR ENT %s\n", temp); //TODO corrigir isto, é temporário o fix
         player->current_game->end_status = 'F';
         end_game(player, plid_mutex);
         return -1;

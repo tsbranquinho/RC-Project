@@ -71,7 +71,7 @@ void remove_player(const char *plid, pthread_mutex_t *plid_mutex) {
             free(current);
 
             pthread_rwlock_unlock(&hash_table_lock);
-            mutex_unlock(plid_mutex); //TODO Mutex
+            mutex_unlock(plid_mutex);
             cleanup_plid_mutex(plid);
             printf("Player with ID %s removed\n", plid);
             return;

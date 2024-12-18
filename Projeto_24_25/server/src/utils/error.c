@@ -2,7 +2,6 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
-// Função recursiva para apagar o conteúdo de um diretório
 void delete_directory_contents(const char *path) {
     struct dirent *entry;
     DIR *dir = opendir(path);
@@ -13,12 +12,11 @@ void delete_directory_contents(const char *path) {
     }
 
     while ((entry = readdir(dir)) != NULL) {
-        // Ignorar os diretórios "." e ".."
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
             continue;
         }
 
-        char full_path[1024];
+        char full_path[GLOBAL_BUFFER];
         snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
 
         struct stat statbuf;

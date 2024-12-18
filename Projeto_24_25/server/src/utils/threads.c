@@ -7,7 +7,7 @@ pthread_mutex_t *mutex_plid(const char *plid) {
     pthread_mutex_t *plid_mutex = get_plid_mutex(plid);
     if (!plid_mutex) {
         fprintf(stderr, "Failed to acquire lock for player %s\n", plid);
-        return NULL; // Return NULL if the lock can't be acquired
+        return NULL;
     }
 
     pthread_mutex_lock(plid_mutex);
@@ -65,7 +65,7 @@ void handle_task(Task task) {
     if (task.is_tcp) {
 
         int client_socket = task.client_socket;
-        char buffer[1024];
+        char buffer[GLOBAL_BUFFER];
         struct sockaddr_in client_addr = task.client_addr;
 
         memset(buffer, 0, sizeof(buffer));
@@ -97,7 +97,6 @@ void handle_task(Task task) {
             handle_scoreboard_request(client_socket);
         }
         else {
-            //NOT SURE IF THIS IS THE RIGHT RESPONSE
             send_tcp_response("ERR\n", client_socket);
             close(client_socket);
         }

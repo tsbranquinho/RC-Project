@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         temp_fds = read_fds;
-        if (select(max_fd + 1, &temp_fds, NULL, NULL, &timeout) < 0) { //TODO timeout
+        if (select(max_fd + 1, &temp_fds, NULL, NULL, &timeout) < 0) {
             perror("Select failed");
             continue;
         }

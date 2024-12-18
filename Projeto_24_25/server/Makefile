@@ -15,7 +15,7 @@ SRCS = $(SRC_DIR)/main.c \
 OBJS = $(SRCS:.c=.o)
 
 # Final executable
-EXEC = ./GS
+EXEC = ./GS -v
 
 all: $(EXEC) 
 	@echo "Server build complete!"

@@ -5,16 +5,14 @@
 
 //duvidas
 
-fazer dicas (tipo dizer o sitio da peça msm) acrescentar um menu de HELP no player 
+fazer dicas (tipo dizer o sitio da peça msm) acrescentar um menu de HELP no player
 documento stor
 Se cliente receber mensagens mal formatadas: temina interação com o servidor e informa o utilizador imprimindo uma mensagem de erro no écran. ...
 
 CORRIGIR DINAMICIDADE DAS PASTAS OU ALTERAR SÓ O SÍTIO DA BUILD
 PROBLEMAS COM EXIT NOK
 meter na make para receber argumentos ...
-ver show_trials e FIN
 
-podemos testar com o servidor daqui
 # Projeto_RC
 
 ## Client Commands to implement
@@ -26,20 +24,18 @@ To test the commands, run `./player -n 193.136.138.142 -p 58011`
 - quit ✅
 - exit ✅
 - debug ✅
-- trials ✅ / Missing FIN ainda mandamos a chave quando estamos a meio
+- trials ✅ 
 - scoreboard ✅
 //Extras
 - set ✅
-- hint
 
 ## Server Commands to implement
 - start ✅
 - try ✅
 - quit ✅
 - debug ✅
-- trials ✅ / Missing FIN and formatting
+- trials ✅ / Missing mandar FIN quando o tempo acabou
 - scoreboard ✅
-- hint
 
 --set PLID done, try dynamic formatting done, debug done
 

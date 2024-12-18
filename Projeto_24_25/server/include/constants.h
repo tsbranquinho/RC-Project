@@ -23,8 +23,6 @@
 #define MAX_PORT 65535
 #define MAX_PLAYERS 128
 #define MAX_LOCKS 128
-#define BUFFER_SIZE 128
-//GAME_XXXXXX.txt
 #define GAME_FILE_NAME_SIZE 16
 #define DEBUG 1
 #define PLAY 2

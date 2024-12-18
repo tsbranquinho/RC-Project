@@ -7,7 +7,7 @@ void handle_trials_request(int tcp_socket) {
     //TODO close if time less than 0
 
     printf("[DEBUG] Received TRIALS request\n");
-    char buffer[4096];
+    char buffer[GLOBAL_BUFFER];
     char plid[ID_SIZE + 1];
     memset(buffer, 0, sizeof(buffer));
     memset(plid, 0, sizeof(plid));
@@ -105,7 +105,7 @@ void handle_trials_request(int tcp_socket) {
 int FindLastGame(char *PLID, char *buffer) {
     struct dirent **filelist;
     int n_entries;
-    char dirname[128], latest_file[512]; // TODO valores tirados do cu
+    char dirname[SMALL_BUFFER], latest_file[FSIZE];
     memset(dirname, 0, sizeof(dirname));
     memset(latest_file, 0, sizeof(latest_file));
 
@@ -141,19 +141,17 @@ int FindLastGame(char *PLID, char *buffer) {
         return 0;
     }
 
-
-    //TODO valores todos errados
-    memset(buffer, 0, BUFFER_SIZE);
+    memset(buffer, 0, SMALL_BUFFER);
     int filesize = 0;
     fseek(file, 0, SEEK_END);
     filesize = ftell(file);
     rewind(file);
-    snprintf(buffer, BUFFER_SIZE, "RST FIN %s %d ", strrchr(latest_file, '/') + 1, filesize+1);
+    snprintf(buffer, SMALL_BUFFER, "RST FIN %s %d ", strrchr(latest_file, '/') + 1, filesize+1);
 
     while (fgets(buffer + strlen(buffer), filesize + 1, file) != NULL) {
         continue;
     }
-    strncat(buffer, "\n", BUFFER_SIZE);
+    strncat(buffer, "\n", SMALL_BUFFER);
     fclose(file);
 
     return 1;

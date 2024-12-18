@@ -22,7 +22,7 @@ void handle_quit_request(const char *request, struct sockaddr_in *client_addr, s
         return;
     }
 
-    char response[BUFFER_SIZE];
+    char response[SMALL_BUFFER];
     char temp[2*MAX_COLORS];
     convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
     player->current_game->end_status = 'Q';

@@ -26,10 +26,6 @@
 #define LENGTH -1                   // For error checking
 #define COLOR -2                    // For error checking
 #define SPACE -3                    // For error checking
-#define GLOBAL_BUFFER 2048          // Global buffer size
-#define SMALL_BUFFER 256            // Small buffer size
-#define FILENAME_SIZE 128           // Size of the filename (a little bigger than needed)
-#define FSIZE 1024                  // Size of the file
 #define STATUS 6                    // Size of the status
 #define COMMAND 4                   // Size of the command
 #define ERROR -1                    // Error

@@ -82,7 +82,7 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
                 current_time->tm_mon + 1, current_time->tm_mday, current_time->tm_hour,
                         current_time->tm_min, current_time->tm_sec);
     
-    char buffer[128];
+    char buffer[SMALL_BUFFER];
 
     memset(buffer, 0, sizeof(buffer));
     snprintf(buffer, sizeof(buffer), "%s D %s %3d %s %ld\n",
