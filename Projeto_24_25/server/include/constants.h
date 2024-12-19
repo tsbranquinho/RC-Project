@@ -77,6 +77,9 @@ typedef struct {
     int udp_socket;
     int tcp_socket;
     int GSport;
+    struct timeval timeout;
+    fd_set read_fds;
+    fd_set temp_fds;
 } set;
 
 

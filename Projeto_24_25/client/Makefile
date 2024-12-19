@@ -28,8 +28,8 @@ $(LOCAL_EXEC): $(OBJS)
 $(PARENT_EXEC): $(OBJS)
 	@$(CC) $(CFLAGS) -o $(PARENT_EXEC) $(OBJS)
 
-run: $(EXEC)
-	@$(EXEC) $(ARGS)
+run: $(LOCAL_EXEC)
+	@$(LOCAL_EXEC) $(ARGS)
 
 %.o: %.c
 	@$(CC) $(CFLAGS) -c $< -o $@

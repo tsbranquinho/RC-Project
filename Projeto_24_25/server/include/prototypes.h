@@ -67,5 +67,15 @@ void print_debug(int value); //TODO remove
 
 void handle_hint_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
 
+void get_arguments(int argc, char *argv[]);
+void setup_server();
+void create_tcp_socket();
+void create_udp_socket();
+void thread_configuration();
+
+int select_handler();
+void udp_connection();
+void tcp_connection();
+
 
 #endif
