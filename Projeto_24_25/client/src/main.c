@@ -8,6 +8,7 @@ int currPlayer = 0;
 int currTries = 0;
 char plidCurr[ID_SIZE + 1];
 int setPLID = 0;
+int hint = 0;
 int hasStarted = 0;
 struct addrinfo *res;
 
@@ -23,13 +24,13 @@ int main(int argc, char *argv[]) {
         char input[MAX_COMMAND_SIZE];
         memset(input, 0, sizeof(input));
         
+        printf("Enter command: ");
         if (fgets(input, sizeof(input), stdin) == NULL) {
             fprintf(stderr, "Error reading command.\n");
             continue;
         }
 
         input[strcspn(input, "\n")] = '\0';
-
         Command cmd = get_next_command(input);
 
         status = handle_command(cmd, input);

@@ -211,33 +211,26 @@ int check_try_ent(Player *player, char* response, pthread_mutex_t *plid_mutex) {
 
 int calculate_feedback(const char *guess, const char *secret, int *black, int *white) {
 
-    int guess_count[MAX_COLORS] = {0};  // Array for counting occurrences of each color in the guess
-    int secret_count[MAX_COLORS] = {0}; // Array for counting occurrences of each color in the secret
-
-    *black = 0;
-    *white = 0;
-
-    // Count "black" pegs and populate color counts for non-matching positions
+    char copy_secret[MAX_COLORS + 1];
+    memset(copy_secret, 0, sizeof(copy_secret));
+    strcpy(copy_secret, secret);
     for (int i = 0; i < MAX_COLORS; i++) {
-        if (strchr(COLOR_OPTIONS, guess[i]) == NULL || strchr(COLOR_OPTIONS, secret[i]) == NULL) {
-            fprintf(stderr, "Error: Invalid character in guess or secret.\n");
-            return -1;
-        }
-
         if (guess[i] == secret[i]) {
             (*black)++;
-        } else {
-            guess_count[color_to_index(guess[i])]++;
-            secret_count[color_to_index(secret[i])]++;
+            copy_secret[i] = ' ';
+            continue;
         }
     }
-
-    // Count "white" pegs (min of guess and secret counts for each color)
     for (int i = 0; i < MAX_COLORS; i++) {
-        *white += (guess_count[i] < secret_count[i]) ? guess_count[i] : secret_count[i];
+        for (int j = 0; j < MAX_COLORS; j++) {
+            if (guess[i] == copy_secret[j]) {
+                (*white)++;
+                copy_secret[j] = ' ';
+                break;
+            }
+        }
     }
-
-    return 0; // Success
+    return 0;
 }
 
 void create_trial(Player *player, char *guess, int black, int white) {

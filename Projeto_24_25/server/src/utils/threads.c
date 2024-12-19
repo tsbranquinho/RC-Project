@@ -121,6 +121,8 @@ void handle_task(Task task) {
             handle_quit_request(buffer, &client_addr, client_addr_len, settings.udp_socket);
         } else if (strncmp(buffer, "DBG", 3) == 0) {
             handle_debug_request(buffer, &client_addr, client_addr_len, settings.udp_socket);
+        } else if (strncmp(buffer, "HNT", 3) == 0) {
+            handle_hint_request(buffer, &client_addr, client_addr_len, settings.udp_socket);
         } else {
             send_udp_response("ERR\n", &client_addr, client_addr_len, settings.udp_socket);
         }

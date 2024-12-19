@@ -53,6 +53,12 @@ void error_no_game(Command cmd);
 void invalid_code(int mode);
 //set.c
 int handle_set(const char* input);
+//sleep.c
+int handle_sleep(const char* input);
+//clean.c
+int handle_clean(const char* input);
+//hint.c
+int handle_hint(const char *input);
 
 
 #endif

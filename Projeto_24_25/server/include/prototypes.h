@@ -63,5 +63,7 @@ void usage(const char *progname);
 
 void print_debug(int value); //TODO remove
 
+void handle_hint_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
+
 
 #endif

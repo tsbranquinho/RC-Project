@@ -46,6 +46,7 @@ void receive_quit_msg(const char *response) {
         hasStarted = 0;
     } else if (strcmp(status, "NOK") == 0) {
         printf("No ongoing game found for this player.\n");
+        hasStarted = 0;
     } else if (strcmp(status, "ERR") == 0) {
         printf("Error quitting game. Please verify your inputs or try again later.\n");
     } else {
@@ -58,5 +59,4 @@ void receive_quit_msg(const char *response) {
 void end_game() {
     currPlayer = 0;
     currTries = 0;
-    plidCurr[0] = '\0';
 }

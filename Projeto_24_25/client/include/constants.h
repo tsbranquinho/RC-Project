@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <time.h>
 #include <sys/time.h>
+#include <dirent.h>
 #include "../../common/common.h"
 
 #define MAX_PORT 65535              // Maximum port number
@@ -41,7 +42,9 @@ typedef enum {
     CMD_DEBUG,
     CMD_INVALID,
     CMD_SET,
-    CMD_SLEEP
+    CMD_SLEEP,
+    CMD_CLEAN,
+    CMD_HINT
 } Command;
 
 void get_arguments(int argc, char *argv[]);

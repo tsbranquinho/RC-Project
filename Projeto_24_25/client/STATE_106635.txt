@@ -1,9 +1,0 @@
-     Last finalized game for player 106635
-Game initiated: 2024-12-16 16:57:37 with 555s to be completed
-Mode: DEBUG Secret code: YYYY
-
-     --- Transactions found: 2 ---
-Trial: YOOO, nB: 1, nW: 0   3s
-Trial: YYYY, nB: 4, nW: 0   7s
-     Termination: WIN at 2024-12-16 16:57:44, Duration: 7s
-

@@ -53,6 +53,12 @@ int invalid_command_format(Command cmd) {
     //extras
     } else if (cmd == CMD_SET){
         fprintf(stderr, "Invalid 'set' command format. Format: set <player_id>\n");
+    } else if (cmd == CMD_SLEEP){
+        fprintf(stderr, "Invalid 'sleep' command format. Format: sleep <time>\n");
+    } else if (cmd == CMD_CLEAN){
+        fprintf(stderr, "Invalid 'clean' command format. Format: clean\n");
+    } else if (cmd == CMD_HINT){
+        fprintf(stderr, "Invalid 'hint' command format. Format: hint\n");
     } else {
         fprintf(stderr, "Invalid command format.\n");
     }
@@ -82,6 +88,8 @@ void error_no_game(Command cmd) {
         printf("No game started. Please start a game before trying a code.\n");
     } else if (cmd == CMD_QUIT) {
         printf("No game to quit.\n");
+    } else if (cmd == CMD_HINT) {
+        printf("No game started. Please start a game before asking for a hint.\n");
     }
 }
 

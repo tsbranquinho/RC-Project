@@ -11,6 +11,7 @@ extern int currPlayer;                      // Flag to check if a player is play
 extern int currTries;                       // Number of tries of the current player (it starts with the "1st try")
 extern struct addrinfo *res;
 extern int setPLID;
+extern int hint;
 extern int hasStarted;
 
 #endif

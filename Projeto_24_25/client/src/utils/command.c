@@ -12,6 +12,8 @@ Command get_next_command(char *input) {
     if (strncmp(input, "sb", 2) == 0 || strncmp(input, "scoreboard", 10) == 0) return CMD_SCOREBOARD;
     if (strncmp(input, "set", 3) == 0) return CMD_SET;
     if (strncmp(input, "sleep", 5) == 0) return CMD_SLEEP;
+    if (strncmp(input, "clean", 5) == 0) return CMD_CLEAN;
+    if (strncmp(input, "hint", 4) == 0) return CMD_HINT;
     return CMD_INVALID;
 }
 
@@ -54,7 +56,15 @@ int handle_command(Command cmd, const char* input) {
             break;
 
         case CMD_SLEEP:
-            sleep(20);
+            return_value = handle_sleep(input);
+            break;
+
+        case CMD_CLEAN:
+            return_value = handle_clean(input);
+            break;
+
+        case CMD_HINT:
+            return_value = handle_hint(input);
             break;
 
         default:

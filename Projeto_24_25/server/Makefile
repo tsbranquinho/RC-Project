@@ -6,16 +6,18 @@ COMMON_DIR = ../common
 TCP_DIR = $(SRC_DIR)/tcp
 UDP_DIR = $(SRC_DIR)/udp
 UTILS_DIR = $(SRC_DIR)/utils
+EXTRAS_DIR = $(SRC_DIR)/extras
 
 SRCS = $(SRC_DIR)/main.c \
        $(wildcard $(TCP_DIR)/*.c) \
        $(wildcard $(UDP_DIR)/*.c) \
 	   $(wildcard $(UTILS_DIR)/*.c) \
+	   $(wildcard $(EXTRAS_DIR)/*.c) \
        $(COMMON_DIR)/common.c
 OBJS = $(SRCS:.c=.o)
 
 # Final executable
-EXEC = ./GS -v
+EXEC = ./GS
 
 all: $(EXEC) 
 	@echo "Server build complete!"
