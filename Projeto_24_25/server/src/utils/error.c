@@ -53,6 +53,7 @@ void cleanup_server() {
 
 void sig_detected(int sig) {
     printf("Shutting down the server...\n");
+    sleep(3);
     cleanup_server();
     kill_sig(sig);
     free(threads);

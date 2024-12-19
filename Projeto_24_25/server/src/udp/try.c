@@ -110,6 +110,8 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         player->current_game->end_status = 'W';
         score_game(player);
         end_game(player, plid_mutex);
+        send_udp_response(response, client_addr, client_addr_len, udp_socket);
+        return;
     } else {
         if (player->current_game->trial_count == MAX_TRIALS) {
             player->current_game->trial_count++; //Está errado e excedemos o limite de tentativas
