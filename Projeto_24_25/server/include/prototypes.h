@@ -40,6 +40,7 @@ unsigned int hash_lock(const char *plid);
 void insert_player(Player *player);
 int valid_plid(const char *plid);
 void clean_server();
+void clean_game(Game *game);
 //error.c
 void delete_directory_contents(const char *path);
 void sig_detected(int sig);

@@ -239,7 +239,14 @@ int calculate_feedback(const char *guess, const char *secret, int *black, int *w
 }
 
 void create_trial(Player *player, char *guess, int black, int white) {
-    Trials *trial = malloc(sizeof(Trials)); //TODO: check if malloc fails
+
+    Trials *trial = malloc(sizeof(Trials));
+
+    if(!trial) {
+        perror("Error allocating memory");
+        return;
+    }
+
     memset(trial->guess, 0, sizeof(trial->guess));
     strncpy(trial->guess, guess, MAX_COLORS);
     trial->black = black;

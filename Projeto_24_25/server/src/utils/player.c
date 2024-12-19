@@ -68,10 +68,11 @@ void remove_player(const char *plid, pthread_mutex_t *plid_mutex) {
             }
 
             printf("Player with ID %s removed\n", plid);
+
             pthread_rwlock_unlock(&hash_table_lock);
             mutex_unlock(plid_mutex);
             cleanup_plid_mutex(plid);
-            free(current->current_game);
+            clean_game(current->current_game);
             free(current);
             
             return;
@@ -144,13 +145,26 @@ int valid_plid(const char *plid) {
     return 1;
 }
 
+void clean_game(Game *game) {
+    printf("Cleaning game\n");
+    while(game->trial != NULL) {
+        printf("Cleaning trial\n");
+        Trials *next = game->trial->prev;
+        free(game->trial);
+        game->trial = next;
+    }
+    free(game);
+}
+
+
 void clean_server() {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         Player *current = hash_table[i];
         while (current != NULL) {
+            printf("Cleaning player %s\n", current->plid);
+            clean_game(current->current_game);
             Player *next = current->next;
             cleanup_plid_mutex(current->plid);
-            free(current->current_game);
             free(current);
             current = next;
         }
@@ -162,5 +176,5 @@ void clean_server() {
             free(lock_table_plid[i]);
         }
     }
-
 }
+

@@ -5,6 +5,7 @@
 Player *hash_table[MAX_PLAYERS] = {NULL};
 pthread_mutex_t lock_table_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t *lock_table_plid[MAX_LOCKS] = {NULL};
+pthread_mutex_t fd_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_rwlock_t hash_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 pthread_rwlock_t scoreboard_lock = PTHREAD_RWLOCK_INITIALIZER;
 
@@ -58,7 +59,11 @@ int main(int argc, char *argv[]) {
 
     if (setsockopt(settings.tcp_socket, SOL_SOCKET, SO_REUSEADDR, &test, sizeof(test)) < 0) {
         perror("Error setting socket timeout");
+        //lock mutex pthread_mutex_t fd_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+        pthread_mutex_lock(&fd_mutex);
         close(settings.tcp_socket);
+        pthread_mutex_unlock(&fd_mutex);
         return EXIT_FAILURE;
     }
 
@@ -134,9 +139,6 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-
-    close(settings.udp_socket);
-    close(settings.tcp_socket);
     return 0;
 }
 

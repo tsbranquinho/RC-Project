@@ -60,7 +60,7 @@ typedef struct {
     struct sockaddr_in client_addr;
     socklen_t addr_len;
     int is_tcp;
-    char buffer[1024];
+    char buffer[GLOBAL_BUFFER];
 } Task;
 
 typedef struct {

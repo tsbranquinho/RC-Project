@@ -7,3 +7,4 @@ void usage(const char *progname) {
     fprintf(stderr, "  -p GSport  Specify the port number (only one) of the game server (optional).\n");
     fprintf(stderr, "  -v         Enable verbose mode (optional).\n");
 }
+

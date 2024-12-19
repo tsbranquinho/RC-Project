@@ -55,10 +55,11 @@ Task task_queue_pop(TaskQueue *queue) {
         if (kill_threads) {
             pthread_mutex_unlock(&kill_mutex);
             pthread_mutex_unlock(&queue->lock);
-            return (Task){0};
+            return (Task){0}; // Return an empty task if terminating
         }
         pthread_mutex_unlock(&kill_mutex);
 
+        // Wait for tasks or termination signal
         pthread_cond_wait(&queue->cond, &queue->lock);
     }
 
