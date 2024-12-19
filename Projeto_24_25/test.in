@@ -1,7 +1,9 @@
-debug 100000 555 Y Y Y Y
-try Y Y Y O
-st
-try Y Y Y Y
-st
-sb
+debug 333333 20 R G B Y
+try R G B Y
+debug 444444 5 R G B Y
+try R O O O
+try O R O O
+show_trials
+sleep 7
+show_trials
 exit

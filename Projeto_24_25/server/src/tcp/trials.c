@@ -89,6 +89,8 @@ void handle_trials_request(int tcp_socket) {
     }
     last_trial_num = atoi(last_num + 1);
     if (last_trial_num + final_time - current_time < 0) {
+        player->current_game->end_status = 'T';
+        time(&player->current_game->last_time);
         end_game(player, plid_mutex);
         if (FindLastGame(plid, buffer)) {
             send_tcp_response(buffer, tcp_socket);
@@ -96,15 +98,14 @@ void handle_trials_request(int tcp_socket) {
         else {
             send_tcp_response("RST NOK\n", tcp_socket);
         }
+        return;
     }
     while (fgets(trash, 1024, file) != NULL) {
         char c1, c2, c3, c4;
         int nb, nw, time;
-        printf("Trash: %s\n", trash);
         if (sscanf(trash, "T: %c%c%c%c %d %d %d\n", &c1, &c2, &c3, &c4, &nb, &nw, &time) != 7) {
             continue;
         }
-        printf("C1: %c, C2: %c, C3: %c, C4: %c, NB: %d, NW: %d, TIME: %d\n", c1, c2, c3, c4, nb, nw, time);
         temp_ptr += sprintf(temp_ptr, "%c %c %c %c %d %d\n", c1, c2, c3, c4, nb, nw);
     }
     temp_ptr += sprintf(temp_ptr, "%ld", last_trial_num + final_time - current_time);
@@ -166,7 +167,7 @@ int FindLastGame(char *PLID, char *buffer) {
     while (fgets(buffer + strlen(buffer), filesize + 1, file) != NULL) {
         continue;
     }
-    strncat(buffer, "\n", SMALL_BUFFER);
+    strncat(buffer, "\n\n", SMALL_BUFFER);
     fclose(file);
 
     return 1;

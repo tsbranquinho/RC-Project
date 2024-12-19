@@ -18,6 +18,7 @@ int send_udp_skt(const char *message, char *response, int response_size, const c
 int handle_show_trials(const char *input);
 void send_show_trials_msg(int sockfd);
 void receive_show_trials_msg(int fd);
+int get_word(char *word, char *response);
 //scoreboard.c
 int handle_show_scoreboard(const char *input);
 void send_show_scoreboard_msg(int sockfd);

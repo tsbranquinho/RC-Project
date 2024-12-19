@@ -34,83 +34,76 @@ void send_show_trials_msg(int fd) {
 
 void receive_show_trials_msg(int fd) {
     char response[GLOBAL_BUFFER];
-    char status[STATUS -2];
+    char status[STATUS-2];
     char command[COMMAND];
+    char temp[5];
 
     char filename[FILENAME_SIZE];
-    int file_size;
+    int file_size = 0;
     char *file_data = NULL;
+    char *response_ptr = response;
 
     if (read_tcp_socket(fd, response, sizeof(response)) == ERROR) {
         printf("Response: %s\n", response);
         printf("ERROR: Failed to receive 'show_trials' response\n");
         return;
     }
-
-    if (sscanf(response, "%s %s", command, status) < 2) {
-        printf("ERROR: Failed to parse 'show_trials' response\n");
-        return;
-    }
+    response_ptr += get_word(command, response_ptr);
     if (strcmp(command, "RST") != 0) {
-        printf("ERROR: Unexpected 'show_trials' response\n");
+        printf("ERROR: Invalid response command\n");
         return;
     }
-
+    response_ptr += get_word(status, response_ptr);
+    if (strcmp(status, "NOK") == 0) {
+        printf("No game found for this player.\n");
+        return;
+    }
+    if (strcmp(status, "ERR") == 0) {
+        printf("Error getting trials. Please try again later.\n");
+        return;
+    }
     if (strcmp(status, "ACT") == 0 || strcmp(status, "FIN") == 0) {
         if (strcmp(status, "FIN") == 0) {
             currPlayer = 0;
         }
-        if (sscanf(response + strlen(command) + strlen(status) + 2, "%s %d\n", filename, &file_size) >= 1) {
-            
-            if(file_size > FSIZE) {
-                printf("ERROR: File size too big\n");
-                return;
-            }
-
-            if(strlen(filename) > 24) {
-                filename[24] = '\0';
-            }
-
-            printf("Filename: %s, File size: %d\n", filename, file_size);
-
-            char *file_data_start = strpbrk(response, "\n ");
-            if (file_data_start != NULL) {
-                file_data_start++;
-
-                file_data = malloc(file_size + 1);
-                if (!file_data) {
-                    printf("ERROR: Memory allocation failed\n");
-                    return;
-                }
-
-                strncpy(file_data, file_data_start, file_size);
-                file_data[file_size] = '\0';
-
-                FILE *fp = fopen(filename, "w");
-                if (!fp) {
-                    perror("Error saving file");
-                    free(file_data);
-                    return;
-                }
-
-                printf("%s\n", file_data_start);
-
-                fwrite(file_data, 1, file_size, fp);
-                fclose(fp);
-                free(file_data);
-            }
-            else {
-                printf("ERROR: Incomplete file data\n");
-            }
+        response_ptr += get_word(filename, response_ptr);
+        response_ptr += get_word(temp, response_ptr);
+        file_size = atoi(temp);
+        if (file_size < 0) {
+            printf("ERROR: Invalid file size\n");
+            return;
         }
-        else {
-            printf("Unexpected server response: %s\n", response);
+        if (*response_ptr == '\n') {
+            response_ptr++;
         }
+        file_data = response_ptr;
+        char *file_data_ptr = file_data;
+        FILE *file = fopen(filename, "w");
+        if (!file) {
+            perror("Error opening file");
+            return;
+        }
+        if (fwrite(file_data_ptr, 1, file_size, file) != file_size) {
+            perror("Error writing to file");
+            fclose(file);
+            return;
+        }
+        fclose(file);
+        printf("Trials saved to file %s\n", filename);
+    } else {
+        printf("ERROR: Invalid response status\n");
+        return;
     }
-    else if (strcmp(status, "NOK") == 0) {
-        printf("No game data available for player '%s'.\n", plidCurr);
+}
+
+
+int get_word(char *word, char *response) {
+    int i = 0;
+    while (*response != ' ' && *response != '\n') {
+        word[i] = *response;
+        response++;
+        i++;
     }
-    else {
-        printf("Unexpected server response: %s\n", response);
-    }
+    word[i] = '\0';
+    return ++i;
 }

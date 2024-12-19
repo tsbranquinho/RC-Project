@@ -41,11 +41,11 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
         
         pthread_mutex_t *plid_mutex = mutex_plid(plid);
         if (!plid_mutex) {
-            send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
+            send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
             return;
         }
 
-        send_udp_response("RSG NOK\n", client_addr, client_addr_len, udp_socket);
+        send_udp_response("RDB NOK\n", client_addr, client_addr_len, udp_socket);
         
         mutex_unlock(plid_mutex);
         return;
@@ -56,7 +56,7 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
         player = create_player(plid);
         if (!player) {
             fprintf(stderr, "Failed to create player %s\n", plid);
-            send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
+            send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
             return;
         }
         insert_player(player);
@@ -64,7 +64,7 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
 
     pthread_mutex_t *plid_mutex = mutex_plid(plid);
     if (!plid_mutex) {
-        send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
+        send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
         return;
     }
 
@@ -87,7 +87,7 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
 
         mutex_unlock(plid_mutex);
 
-        send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
+        send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
         return;
     }
 
@@ -101,7 +101,7 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
     char buffer[SMALL_BUFFER];
 
     memset(buffer, 0, sizeof(buffer));
-    snprintf(buffer, sizeof(buffer), "%s D %s %3d %s %ld\n",
+    snprintf(buffer, sizeof(buffer), "%s D %s %03d %s %ld\n",
             plid, player->current_game->secret_key,
             player->current_game->max_time, time_str,
             player->current_game->start_time);

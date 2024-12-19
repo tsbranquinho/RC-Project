@@ -5,10 +5,7 @@
 void send_tcp_response(char *message, int tcp_socket) {
     ssize_t n = strlen(message);
     char* pointer = message;
-    printf("Sending message: %s\nNow the ASCII:\n", message);
-    for (int i = 0; i < 200; i++) {
-        printf("%d ", message[i]);
-    }
+    printf("Sending message: %s\n", message);
     while (n > 0) {
         ssize_t bytes = write(tcp_socket, pointer, n);
         if (bytes < 0) {

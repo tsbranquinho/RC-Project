@@ -94,7 +94,7 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
     char buffer[128];
 
     memset(buffer, 0, sizeof(buffer));
-    snprintf(buffer, sizeof(buffer), "%s P %s %3d %s %ld\n",
+    snprintf(buffer, sizeof(buffer), "%s P %s %03d %s %ld\n",
             plid, player->current_game->secret_key,
             player->current_game->max_time, time_str,
             player->current_game->start_time);
