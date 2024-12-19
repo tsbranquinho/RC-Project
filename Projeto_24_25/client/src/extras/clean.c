@@ -11,19 +11,15 @@ int handle_clean(const char* input) {
     struct dirent* entry;
     int deleted_count = 0;
 
-    // Open the current directory
     dir = opendir(".");
     if (dir == NULL) {
         perror("Failed to open directory");
         return TRUE;
     }
 
-    // Iterate through each entry in the directory
     while ((entry = readdir(dir)) != NULL) {
-        // Check if the file ends with ".txt"
         char* ext = strrchr(entry->d_name, '.');
         if (ext != NULL && strcmp(ext, ".txt") == 0) {
-            // Attempt to remove the file
             if (remove(entry->d_name) == 0) {
                 deleted_count++;
             } else {

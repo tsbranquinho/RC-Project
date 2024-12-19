@@ -1,0 +1,2 @@
+OK scores.txt 47 998 100001 OPOY 1 PLAY
+797 100

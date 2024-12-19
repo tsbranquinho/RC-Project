@@ -57,6 +57,9 @@ void receive_show_trials_msg(int fd) {
     }
 
     if (strcmp(status, "ACT") == 0 || strcmp(status, "FIN") == 0) {
+        if (strcmp(status, "FIN") == 0) {
+            currPlayer = 0;
+        }
         if (sscanf(response + strlen(command) + strlen(status) + 2, "%s %d\n", filename, &file_size) >= 1) {
             
             if(file_size > FSIZE) {

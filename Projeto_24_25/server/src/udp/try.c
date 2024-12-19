@@ -212,16 +212,21 @@ int check_try_ent(Player *player, char* response, pthread_mutex_t *plid_mutex) {
 int calculate_feedback(const char *guess, const char *secret, int *black, int *white) {
 
     char copy_secret[MAX_COLORS + 1];
+    int calculated[MAX_COLORS] = {0};
     memset(copy_secret, 0, sizeof(copy_secret));
     strcpy(copy_secret, secret);
     for (int i = 0; i < MAX_COLORS; i++) {
         if (guess[i] == secret[i]) {
             (*black)++;
             copy_secret[i] = ' ';
+            calculated[i] = 1;
             continue;
         }
     }
     for (int i = 0; i < MAX_COLORS; i++) {
+        if (calculated[i]) {
+            continue;
+        }
         for (int j = 0; j < MAX_COLORS; j++) {
             if (guess[i] == copy_secret[j]) {
                 (*white)++;

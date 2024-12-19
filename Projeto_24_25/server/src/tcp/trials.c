@@ -88,6 +88,15 @@ void handle_trials_request(int tcp_socket) {
         return;
     }
     last_trial_num = atoi(last_num + 1);
+    if (last_trial_num + final_time - current_time < 0) {
+        end_game(player, plid_mutex);
+        if (FindLastGame(plid, buffer)) {
+            send_tcp_response(buffer, tcp_socket);
+        }
+        else {
+            send_tcp_response("RST NOK\n", tcp_socket);
+        }
+    }
     while (fgets(trash, 1024, file) != NULL) {
         char c1, c2, c3, c4;
         int nb, nw, time;

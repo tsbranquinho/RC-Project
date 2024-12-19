@@ -38,6 +38,7 @@ typedef struct Trials {
 typedef struct Game {
     char secret_key[MAX_COLORS + 1];
     int trial_count;
+    int hint_count;
     int mode;
     Trials *trial;
     time_t start_time;

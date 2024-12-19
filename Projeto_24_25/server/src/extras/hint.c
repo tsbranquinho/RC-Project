@@ -19,8 +19,13 @@ void handle_hint_request(const char *request, struct sockaddr_in *client_addr, s
         printf("Hint request from %s\n", plid);
     }
     Player *player = find_player(plid);
+
     if (!player) {
         send_udp_response("RHT NOK\n", client_addr, client_addr_len, udp_socket);
+        return;
+    }
+    if (++player->current_game->hint_count != hint) {
+        send_udp_response("RHT INV\n", client_addr, client_addr_len, udp_socket);
         return;
     }
 

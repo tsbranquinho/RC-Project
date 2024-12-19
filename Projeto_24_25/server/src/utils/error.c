@@ -41,47 +41,18 @@ void delete_directory_contents(const char *path) {
 
 
 void cleanup_server() {
-    printf("Cleaning up server resources...\n");
-
-    pthread_rwlock_wrlock(&hash_table_lock);
-
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        Player *current = hash_table[i];
-        while (current != NULL) {
-            Player *next = current->next;
-
-            if (current->current_game) {
-                free(current->current_game);
-            }
-
-            free(current);
-            current = next;
-        }
-        hash_table[i] = NULL;
-    }
-
-    pthread_rwlock_unlock(&hash_table_lock);
-
-    pthread_mutex_lock(&lock_table_mutex);
-
-    for (int i = 0; i < MAX_LOCKS; i++) {
-        if (lock_table_plid[i] != NULL) {
-            pthread_mutex_destroy(lock_table_plid[i]);
-            free(lock_table_plid[i]);
-            lock_table_plid[i] = NULL;
-        }
-    }
-
-    pthread_mutex_unlock(&lock_table_mutex);
-
-    printf("Server resources cleaned up successfully.\n");
+    //TODO: free memory, threads....
+    int tcp_socket = settings.tcp_socket;
+    int udp_socket = settings.udp_socket;
+    close(tcp_socket);
+    close(udp_socket);
 }
 
 void sig_detected(int sig) {
     printf("Shutting down the server...\n");
 
     // TODO: free memory, close all sockets, threads....
-    //cleanup_server(); // Limpar Hash Table e Lock Table
+    cleanup_server(); // Limpar Hash Table e Lock Table
 
     delete_directory_contents("GAMES");
 

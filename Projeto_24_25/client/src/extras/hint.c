@@ -13,6 +13,10 @@ int handle_hint(const char *input) {
     char message[SMALL_BUFFER];
     memset(message, 0, sizeof(message));
     hint++;
+    if (hint > 4) {
+        printf("You have already used all the hints.\n");
+        return TRUE;
+    }
     sprintf(message, "HNT %s %d\n", plidCurr, hint);
     char response[SMALL_BUFFER];
     memset(response, 0, sizeof(response));
@@ -31,6 +35,8 @@ int handle_hint(const char *input) {
         printf("Hint: %c %c %c %c\n", c1, c2, c3, c4);
     } else if (strcmp(status, "NOK") == 0) {
         printf("No ongoing game found for this player.\n");
+    } else if(strcmp(status, "INV") == 0) {
+        printf("Invalid hint request. Please try again.\n");
     } else if (strcmp(status, "ERR") == 0) {
         printf("Error getting hint. Please verify your inputs or try again later.\n");
     } else {

@@ -70,6 +70,7 @@ void receive_debug_msg(const char *plid, const char *response) {
         setPLID = 0;
         hasStarted = 1;
         strcpy(plidCurr, plid);
+        printf("Debug game started. You can begin playing.\n");
     } else if (strcmp(status, "NOK") == 0) {
         printf("Debug game not started: an ongoing game exists for this player.\n");
     } else if (strcmp(status, "ERR") == 0) {
