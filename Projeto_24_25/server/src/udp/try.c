@@ -18,7 +18,7 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     if (check_try_err(request, n_args, aux_guess, &trial_num) < 0) {
         if(settings.verbose_mode) {
             printf("Message: %s\n", request);
-            printf(stderr, "Invalid try request\n");
+            fprintf(stderr, "Invalid try request\n");
         }
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         return;

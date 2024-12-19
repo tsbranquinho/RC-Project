@@ -38,6 +38,7 @@ void remove_player(const char *plid, pthread_mutex_t *plid_mutex);
 unsigned int hash(const char *plid);
 unsigned int hash_lock(const char *plid);
 void insert_player(Player *player);
+int valid_plid(const char *plid);
 //error.c
 void delete_directory_contents(const char *path);
 void sig_detected(int sig);

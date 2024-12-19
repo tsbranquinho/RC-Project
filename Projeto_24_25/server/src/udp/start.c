@@ -9,7 +9,7 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
     if (sscanf(request, "SNG %6s %3d", plid, &max_time) != 2 || max_time <= 0 || max_time > MAX_PLAYTIME) {
         if (settings.verbose_mode) {
             printf("Message: %s\n", request);
-            printf(stderr, "Invalid start request\n");
+            fprintf(stderr, "Invalid start request\n");
         }
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
         return;
