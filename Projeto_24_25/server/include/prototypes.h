@@ -39,6 +39,7 @@ unsigned int hash(const char *plid);
 unsigned int hash_lock(const char *plid);
 void insert_player(Player *player);
 int valid_plid(const char *plid);
+void clean_server();
 //error.c
 void delete_directory_contents(const char *path);
 void sig_detected(int sig);
@@ -60,7 +61,7 @@ void task_queue_push(TaskQueue *queue, Task task);
 Task task_queue_pop(TaskQueue *queue);
 void sig_detected(int signo);
 void usage(const char *progname);
-
+void kill_sig(int signo);
 void print_debug(int value); //TODO remove
 
 void handle_hint_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);

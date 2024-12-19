@@ -8,6 +8,9 @@ pthread_mutex_t *lock_table_plid[MAX_LOCKS] = {NULL};
 pthread_rwlock_t hash_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 pthread_rwlock_t scoreboard_lock = PTHREAD_RWLOCK_INITIALIZER;
 
+int num_threads = 0;
+pthread_t *threads = NULL;
+
 TaskQueue task_queue;
 
 set settings = {0};
@@ -78,11 +81,16 @@ int main(int argc, char *argv[]) {
 
     printf("Game Server is running.\n");
 
-    int num_threads = sysconf(_SC_NPROCESSORS_ONLN) * 2;
+    num_threads = sysconf(_SC_NPROCESSORS_ONLN) * 2;
     if (num_threads <= 0) num_threads = 1;
     printf("Number of threads: %d\n", num_threads);
 
-    pthread_t threads[num_threads];
+    threads = malloc(sizeof(pthread_t) * num_threads);
+    if (threads == NULL) {
+        perror("Thread pool allocation failed");
+        return EXIT_FAILURE;
+    }
+
     for (int i = 0; i < num_threads; i++) {
         pthread_create(&threads[i], NULL, worker_thread, NULL);
     }

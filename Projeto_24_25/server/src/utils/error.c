@@ -41,7 +41,7 @@ void delete_directory_contents(const char *path) {
 
 
 void cleanup_server() {
-    //TODO: free memory, threads....
+    void clean_server();
     int tcp_socket = settings.tcp_socket;
     int udp_socket = settings.udp_socket;
     close(tcp_socket);
@@ -50,14 +50,11 @@ void cleanup_server() {
 
 void sig_detected(int sig) {
     printf("Shutting down the server...\n");
-
-    // TODO: free memory, close all sockets, threads....
-    cleanup_server(); // Limpar Hash Table e Lock Table
-
+    kill_sig(sig);
+    cleanup_server();
     delete_directory_contents("GAMES");
-
     delete_directory_contents("SCORES");
-
+    free(threads);
     printf("Deleted all files and directories.\n");
     exit(0);
 }

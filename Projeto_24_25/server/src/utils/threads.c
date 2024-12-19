@@ -2,6 +2,9 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
+int kill_threads = 0;
+pthread_mutex_t kill_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 pthread_mutex_t *mutex_plid(const char *plid) {
 
     pthread_mutex_t *plid_mutex = get_plid_mutex(plid);
@@ -48,6 +51,14 @@ Task task_queue_pop(TaskQueue *queue) {
     pthread_mutex_lock(&queue->lock);
 
     while (queue->count == 0) {
+        pthread_mutex_lock(&kill_mutex);
+        if (kill_threads) {
+            pthread_mutex_unlock(&kill_mutex);
+            pthread_mutex_unlock(&queue->lock);
+            return (Task){0};
+        }
+        pthread_mutex_unlock(&kill_mutex);
+
         pthread_cond_wait(&queue->cond, &queue->lock);
     }
 
@@ -131,8 +142,38 @@ void handle_task(Task task) {
 
 void *worker_thread(void *arg) {
     while (1) {
+        pthread_mutex_lock(&kill_mutex);
+        if (kill_threads) {
+            printf("Thread %ld exiting\n", pthread_self());
+            pthread_mutex_unlock(&kill_mutex);
+            break;
+        }
+        pthread_mutex_unlock(&kill_mutex);
+
         Task task = task_queue_pop(&task_queue);
+
+        pthread_mutex_lock(&kill_mutex);
+        if (kill_threads) {
+            pthread_mutex_unlock(&kill_mutex);
+            break;
+        }
+        pthread_mutex_unlock(&kill_mutex);
+
         handle_task(task);
     }
     return NULL;
+}
+
+void kill_sig(int signo) {
+    pthread_mutex_lock(&kill_mutex);
+    kill_threads = 1;
+    pthread_mutex_unlock(&kill_mutex);
+
+    pthread_cond_broadcast(&task_queue.cond);
+
+    for (int i = 0; i < num_threads; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    printf("All threads terminated.\n");
 }

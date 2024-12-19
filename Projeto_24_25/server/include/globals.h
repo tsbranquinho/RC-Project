@@ -12,4 +12,7 @@ extern pthread_rwlock_t scoreboard_lock;
 
 extern set settings;
 extern TaskQueue task_queue;
+
+extern pthread_t *threads;
+extern int num_threads;
 #endif
