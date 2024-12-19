@@ -19,9 +19,9 @@ set settings = {0};
 
 int main(int argc, char *argv[]) {
 
-    int GSport = DEFAULT_PORT;
     int opt, test=1;
     settings.verbose_mode = 0;
+    settings.GSport = DEFAULT_PORT;
     struct timeval timeout;
     timeout.tv_sec = 10;
     timeout.tv_usec = 0;
@@ -31,8 +31,8 @@ int main(int argc, char *argv[]) {
     while ((opt = getopt(argc, argv, "p:v")) != -1) {
         switch (opt) {
             case 'p':
-                GSport = atoi(optarg);
-                if (GSport < 0 || GSport > MAX_PORT) {
+                settings.GSport = atoi(optarg);
+                if (settings.GSport < 0 || settings.GSport > MAX_PORT) {
                     fprintf(stderr, "Error: Invalid port number\n");
                     return EXIT_FAILURE;
                 }
@@ -46,7 +46,22 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("Starting Game Server on port: %d\n", GSport);
+    struct stat st;
+
+    if (stat("GAMES", &st) == -1) {
+        if (mkdir("GAMES", 0777) == -1) {
+            perror("Error creating GAMES directory");
+            return EXIT_FAILURE;
+        }
+    }
+    if (stat("SCORES", &st) == -1) {
+        if (mkdir("SCORES", 0777) == -1) {
+            perror("Error creating SCORES directory");
+            return EXIT_FAILURE;
+        }
+    }
+
+    printf("Starting Game Server on port: %d\n", settings.GSport);
 
     task_queue_init(&task_queue);
 
@@ -70,7 +85,7 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in server_addr = {
         .sin_family = AF_INET,
         .sin_addr.s_addr = INADDR_ANY,
-        .sin_port = htons(GSport)
+        .sin_port = htons(settings.GSport)
     };
 
     if (bind(settings.udp_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0 ||

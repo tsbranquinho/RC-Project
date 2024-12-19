@@ -76,6 +76,7 @@ typedef struct {
     int verbose_mode;
     int udp_socket;
     int tcp_socket;
+    int GSport;
 } set;
 
 

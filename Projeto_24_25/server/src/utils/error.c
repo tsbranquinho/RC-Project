@@ -40,20 +40,22 @@ void delete_directory_contents(const char *path) {
 }
 
 void cleanup_server() {
-    void clean_server();
-    int tcp_socket = settings.tcp_socket;
-    int udp_socket = settings.udp_socket;
+
+    clean_server();
+
     pthread_mutex_lock(&fd_mutex);
-    close(tcp_socket);
-    close(udp_socket);
+
+    close(settings.tcp_socket);
+    close(settings.udp_socket);
     pthread_mutex_unlock(&fd_mutex);
-    free(threads);
+
 }
 
 void sig_detected(int sig) {
     printf("Shutting down the server...\n");
     cleanup_server();
     kill_sig(sig);
+    free(threads);
     delete_directory_contents("GAMES");
     delete_directory_contents("SCORES");
     printf("Deleted all files and directories.\n");

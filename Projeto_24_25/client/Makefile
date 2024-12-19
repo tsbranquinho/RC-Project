@@ -16,13 +16,17 @@ SRCS = $(SRC_DIR)/main.c \
        $(COMMON_DIR)/common.c
 OBJS = $(SRCS:.c=.o)
 
-EXEC = ./player
+LOCAL_EXEC = ./player
+PARENT_EXEC = ./../player
 
-all: $(EXEC) 
+all: $(LOCAL_EXEC) $(PARENT_EXEC)
 	@echo "Client build complete!"
 
-$(EXEC): $(OBJS)
-	@$(CC) $(CFLAGS) -o player $(OBJS)
+$(LOCAL_EXEC): $(OBJS)
+	@$(CC) $(CFLAGS) -o $(LOCAL_EXEC) $(OBJS)
+
+$(PARENT_EXEC): $(OBJS)
+	@$(CC) $(CFLAGS) -o $(PARENT_EXEC) $(OBJS)
 
 run: $(EXEC)
 	@$(EXEC) $(ARGS)
@@ -32,4 +36,5 @@ run: $(EXEC)
 
 clean:
 	@rm -f $(OBJS) $(EXEC) $(COMMON_DIR)/common.o *.o
+	@rm -f player
 	@echo "Client clean complete!"

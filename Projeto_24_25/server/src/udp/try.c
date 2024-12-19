@@ -175,7 +175,6 @@ int check_try_inv(Player *player, int trial_num, char *guess) {
                 return -1;
             }
             else {
-                player->current_game->trial_count--;
                 return 1;
             }
         }

@@ -9,21 +9,25 @@ UTILS_DIR = $(SRC_DIR)/utils
 EXTRAS_DIR = $(SRC_DIR)/extras
 
 SRCS = $(SRC_DIR)/main.c \
-       $(wildcard $(TCP_DIR)/*.c) \
-       $(wildcard $(UDP_DIR)/*.c) \
-	   $(wildcard $(UTILS_DIR)/*.c) \
-	   $(wildcard $(EXTRAS_DIR)/*.c) \
-       $(COMMON_DIR)/common.c
+    $(wildcard $(TCP_DIR)/*.c) \
+    $(wildcard $(UDP_DIR)/*.c) \
+	$(wildcard $(UTILS_DIR)/*.c) \
+	$(wildcard $(EXTRAS_DIR)/*.c) \
+    $(COMMON_DIR)/common.c
 OBJS = $(SRCS:.c=.o)
 
-# Final executable
-EXEC = ./GS
+LOCAL_EXEC = ./GS
+PARENT_EXEC = ./../GS
 
-all: $(EXEC) 
+all: $(LOCAL_EXEC) $(PARENT_EXEC)
 	@echo "Server build complete!"
 
-$(EXEC): $(OBJS)
-	@$(CC) $(CFLAGS) -o GS $(OBJS)
+$(LOCAL_EXEC): $(OBJS)
+	@$(CC) $(CFLAGS) -o $(LOCAL_EXEC) $(OBJS)
+
+$(PARENT_EXEC): $(OBJS)
+	@$(CC) $(CFLAGS) -o $(PARENT_EXEC) $(OBJS)
+
 
 run: $(EXEC)
 	@$(EXEC) $(ARGS)
@@ -33,4 +37,5 @@ run: $(EXEC)
 
 clean:
 	@rm -f $(OBJS) $(EXEC) $(COMMON_DIR)/common.o *.o
+	@rm -f GS
 	@echo "Server clean complete!"
