@@ -53,12 +53,16 @@ void cleanup_server() {
 
 void sig_detected(int sig) {
     printf("Shutting down the server...\n");
-    sleep(3);
-    cleanup_server();
+
     kill_sig(sig);
+
+    cleanup_server();
+    
     free(threads);
+
     delete_directory_contents("GAMES");
     delete_directory_contents("SCORES");
     printf("Deleted all files and directories.\n");
+    
     exit(0);
 }

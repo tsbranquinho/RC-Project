@@ -57,7 +57,7 @@ Task task_queue_pop(TaskQueue *queue) {
         if (kill_threads) {
             pthread_mutex_unlock(&kill_mutex);
             pthread_mutex_unlock(&queue->lock);
-            return (Task){0}; // Return an empty task if terminating
+            return (Task){0};
         }
         pthread_mutex_unlock(&kill_mutex);
 
@@ -114,9 +114,10 @@ void *worker_thread(void *arg) {
         pthread_mutex_unlock(&kill_mutex);
 
         Task task = task_queue_pop(&task_queue);
-
+        
         pthread_mutex_lock(&kill_mutex);
-        if (kill_threads) {
+        Task zero_task = {0};
+        if (kill_threads || memcmp(&task, &zero_task, sizeof(Task)) == 0) {
             pthread_mutex_unlock(&kill_mutex);
             break;
         }
@@ -133,6 +134,8 @@ void kill_sig(int signo) {
     pthread_mutex_unlock(&kill_mutex);
 
     pthread_cond_broadcast(&task_queue.cond);
+
+    sleep(1);
 
     for (int i = 0; i < num_threads; i++) {
         pthread_join(threads[i], NULL);

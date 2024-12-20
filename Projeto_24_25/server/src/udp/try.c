@@ -100,7 +100,7 @@ int handle_try_request(char *request, struct sockaddr_in *client_addr, socklen_t
         return ERROR;
     }
 
-    if (black == MAX_COLORS) 
+    if (black == MAX_COLORS) {
         snprintf(response, sizeof(response), "RTR OK %d 4 0\n", trial_num);
         player->current_game->end_status = 'W';
         score_game(player);

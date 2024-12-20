@@ -45,7 +45,7 @@ int read_tcp_socket(int fd, char *buffer, size_t size) {
 
 int tcp_handler(char *buffer, int client_socket, struct sockaddr_in client_addr) {
     memset(buffer, 0, SMALL_BUFFER);
-    int n = read_tcp_socket(client_socket, buffer, 4); 
+    int n = read_tcp_socket(client_socket, buffer, 4);
     if (n < 0) {
         if (errno == EWOULDBLOCK || errno == EAGAIN) {
             perror("Timeout");
