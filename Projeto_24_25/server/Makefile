@@ -37,4 +37,5 @@ run: $(LOCAL_EXEC)
 clean:
 	@rm -f $(OBJS) $(EXEC) $(COMMON_DIR)/common.o *.o
 	@rm -f GS
+	@rm -f $(PARENT_EXEC)
 	@echo "Server clean complete!"

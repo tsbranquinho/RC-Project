@@ -37,4 +37,5 @@ run: $(LOCAL_EXEC)
 clean:
 	@rm -f $(OBJS) $(EXEC) $(COMMON_DIR)/common.o *.o
 	@rm -f player
+	@rm -f $(PARENT_EXEC)
 	@echo "Client clean complete!"

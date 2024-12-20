@@ -1,1 +1,0 @@
-OK scores.txt 23 498 10

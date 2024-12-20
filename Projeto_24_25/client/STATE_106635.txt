@@ -1,9 +1,0 @@
-     Active game found for player 106635
-Game initiated: 2024-12-20 01:21:55 with 555 seconds to be completed
-
-     --- Transactions found: 1 ---
-
-Trial: OOOO, nB: 0, nW: 0 at   3s
-
-  -- 552 seconds remaining to be completed -- 
-
