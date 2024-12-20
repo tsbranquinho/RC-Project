@@ -22,7 +22,7 @@ void find_top_scores(char* buffer) {
     char filename[11];
     snprintf(filename, sizeof(filename), "scores.txt");
     int nentries, ifile;
-    char fname[300];
+    char fname[GLOBAL_BUFFER];
     FILE *fp;
     char mode[8];
     char plid[ID_SIZE + 1];

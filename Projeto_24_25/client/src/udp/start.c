@@ -6,7 +6,9 @@ int handle_start(const char *input) {
     char plid[MAX_COMMAND_SIZE];
     memset(plid, 0, sizeof(plid));
     int time;
-    if (sscanf(input, "start %s %d", plid, &time) != 2 ) {
+
+    char extra;
+    if (sscanf(input, "start %s %d %c", plid, &time, &extra) != 2 ) {
         return invalid_command_format(CMD_START);
     }
 
@@ -44,7 +46,9 @@ void start_game(const char *plid, unsigned int time) {
 void receive_start_msg(const char *response, const char *plid) {
     char status[SMALL_BUFFER];
     memset(status, 0, sizeof(status));
-    if (sscanf(response, "RSG %s", status) != 1) {
+
+    char extra;
+    if (sscanf(response, "RSG %s %c", status,&extra) != 1) {
         return error_communicating_with_server(response);
     }
 

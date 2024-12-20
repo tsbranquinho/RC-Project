@@ -3,7 +3,7 @@
 #include "../../include/globals.h"
 
 int handle_quit(const char *input) {
-    if (sscanf(input, "quit") != 0) {
+    if (strcmp(input,"quit") != 0) {
         return invalid_command_format(CMD_QUIT);
     }
     quit_game();
@@ -36,12 +36,14 @@ void receive_quit_msg(const char *response) {
     char secret_code[2*MAX_COLORS];
     memset(secret_code, 0, sizeof(secret_code));
 
-    int matched = sscanf(response, "RQT %s %[^\n]", status, secret_code);
-    if (matched < 1) {
+    char extra;
+    int matched = sscanf(response, "RQT %s %c %c %c %c %c", status, &secret_code[0], &secret_code[2], &secret_code[4], &secret_code[6], &extra);
+
+    if (matched < 1 || matched > 5) {
         return error_communicating_with_server(response);
     }
 
-    if (strcmp(status, "OK") == 0 && matched == 2) {
+    if (strcmp(status, "OK") == 0 && matched == 5) {
         printf("Game successfully quit. The secret code was: %s\n", secret_code);
         hasStarted = 0;
     } else if (strcmp(status, "NOK") == 0) {

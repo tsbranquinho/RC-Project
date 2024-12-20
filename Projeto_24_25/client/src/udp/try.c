@@ -3,9 +3,16 @@
 #include "../../include/globals.h"
 
 int handle_try(const char *input) {
-    char code[8];
+
+    char code[2*MAX_COLORS];
     memset(code, 0, sizeof(code));
-    if (sscanf(input, "try %[^\n]", code) != 1) {
+    code[2*MAX_COLORS-1] = '\0';
+    code[1] = ' ';
+    code[3] = ' ';
+    code[5] = ' ';
+
+    char extra;
+    if (sscanf(input, "try %c %c %c %c %c", &code[0], &code[2], &code[4], &code[6], &extra) != 4) {
         return invalid_command_format(CMD_TRY);
     }
     try_code(code);
@@ -59,12 +66,20 @@ void receive_try_msg(const char *response) {
     memset(status, 0, sizeof(status));
     memset(code, 0, sizeof(code));
 
-    if (sscanf(response, "RTR %s", status) < 1) {
+    code[2*MAX_COLORS-1] = '\0';
+    code[1] = ' ';
+    code[3] = ' ';
+    code[5] = ' ';
+    char extra;
+
+
+    if (sscanf(response, "RTR %s", status) != 1) {
         return error_communicating_with_server(response);
     }
 
     if (strcmp("OK", status) == 0) {
-        if (sscanf(response + 4 + 3, "%d %d %d", &tries, &black, &white) < 3) {
+
+        if (sscanf(response + 4 + 3, "%d %d %d %c", &tries, &black, &white, &extra) != 3) {
             return error_communicating_with_server(response);
         }
         currTries = tries;
@@ -87,14 +102,14 @@ void receive_try_msg(const char *response) {
     } else if (strcmp("ERR", status) == 0) {
         printf("Error trying code. Please verify inputs or try again later.\n");
     } else if (strcmp("ENT", status) == 0) {
-        if (sscanf(response + 4 + 4, "%[^\n]", code) < 1) {
+        if (sscanf(response + 4 + 4, "%c %c %c %c %c", &code[0], &code[2], &code[4], &code[6], &extra) != 4) {
             return error_communicating_with_server(response);
         }
         printf("No more attempts left. You lose! The secret code was: %s\n", code);
         currTries = 0;
 
     } else if (strcmp("ETM", status) == 0) {
-        if (sscanf(response + 4 + 4, "%[^\n]", code) < 1) {
+        if (sscanf(response + 4 + 4, "%c %c %c %c %c", &code[0], &code[2], &code[4], &code[6], &extra) != 4) {
             return error_communicating_with_server(response);
         }
         printf("Time limit exceeded. You lose! The secret code was: %s\n", code);

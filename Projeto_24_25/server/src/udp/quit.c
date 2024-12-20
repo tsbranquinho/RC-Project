@@ -5,7 +5,8 @@
 int handle_quit_request(char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
     char plid[ID_SIZE + 1];
 
-    if (sscanf(request, "QUT %6s", plid) != 1) {
+    char extra;
+    if (sscanf(request, "QUT %6s %c", plid, &extra) != 1) {
 
         send_udp_response("RQT ERR\n", client_addr, client_addr_len, udp_socket);
         return ERROR;
@@ -58,28 +59,34 @@ int end_game(Player *player, pthread_mutex_t *plid_mutex) {
         last_time = player->current_game->last_time;
     }
     struct tm *current_time = gmtime(&last_time);
-    char time_str[20];
+
+    char time_str[20]; // YYYY-MM-DD HH:MM:SS
+
     sprintf(time_str, "%04d-%02d-%02d %02d:%02d:%02d", current_time->tm_year + 1900, current_time->tm_mon + 1, 
         current_time->tm_mday, current_time->tm_hour, current_time->tm_min, current_time->tm_sec);
-    char buffer[128];
+
+    char buffer[SMALL_BUFFER];
     memset(buffer, 0, sizeof(buffer));
     snprintf(buffer, sizeof(buffer), "%s %ld\n", time_str, last_time-player->current_game->start_time);
+
     fwrite(buffer, 1, strlen(buffer), file);
     fclose(file);
-    // Rename the file
-    //GAMES/XXXXXX
-    char directory[13];
+
+    char directory[13]; // GAMES/ + PLID
     memset(directory, 0, sizeof(directory));
+
     snprintf(directory, sizeof(directory), "GAMES/%s", player->plid);
     if (mkdir(directory, 0777) == -1 && errno != EEXIST) {
         perror("Error creating directory");
         mutex_unlock(plid_mutex);
         return -1;
     }
+
     memset(buffer, 0, sizeof(buffer));
     snprintf(buffer, sizeof(buffer), "GAMES/%s/%04d%02d%02d_%02d%02d%02d_%c.txt", player->plid,
         current_time->tm_year + 1900, current_time->tm_mon + 1, current_time->tm_mday,
         current_time->tm_hour, current_time->tm_min, current_time->tm_sec, player->current_game->end_status);
+
     if (rename(player->current_game->filename, buffer) == -1) {
         perror("Error moving file");
         mutex_unlock(plid_mutex);
@@ -114,7 +121,7 @@ int score_game(Player *player) {
 
     pthread_rwlock_wrlock(&scoreboard_lock);
 
-    char filename[128];
+    char filename[FILENAME_SIZE];
     memset(filename, 0, sizeof(filename));
     snprintf(filename, sizeof(filename), "SCORES/%03d_%s_%02d%02d%04d_%02d%02d%02d.txt", 
         score, player->plid, current_time->tm_mday, current_time->tm_mon + 1, current_time->tm_year + 1900,
@@ -125,7 +132,8 @@ int score_game(Player *player) {
         pthread_rwlock_unlock(&scoreboard_lock);
         return -1;
     }
-    char buffer[128];
+
+    char buffer[SMALL_BUFFER];
     memset(buffer, 0, sizeof(buffer));
     snprintf(buffer, sizeof(buffer), "%03d %s %s %d %s\n",
         score, player->plid, player->current_game->secret_key, player->current_game->trial_count, mode);

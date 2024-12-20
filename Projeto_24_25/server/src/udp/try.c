@@ -11,11 +11,19 @@ int handle_try_request(char *request, struct sockaddr_in *client_addr, socklen_t
     aux_guess[1] = ' ';
     aux_guess[3] = ' ';
     aux_guess[5] = ' ';
-    int n_args = sscanf(request, "TRY %s %c %c %c %c %d", plid, &aux_guess[0], &aux_guess[2], &aux_guess[4], &aux_guess[6], &trial_num);
+
+    char extra;
+    int n_args = sscanf(request, "TRY %s %c %c %c %c %d %c", plid, &aux_guess[0], &aux_guess[2], &aux_guess[4], &aux_guess[6], &trial_num, &extra);
     aux_guess[7] = '\0';
 
 
-    if (check_try_err(request, n_args, aux_guess, &trial_num) < 0) {
+    if (check_try_err(request, n_args, aux_guess, trial_num) < 0) {
+        printf("Invalid TRY request\n");
+        send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
+        return ERROR;
+    }
+
+    if(!valid_plid(plid)) {
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         return ERROR;
     }
@@ -127,8 +135,14 @@ int handle_try_request(char *request, struct sockaddr_in *client_addr, socklen_t
     return SUCCESS;
 }
 
-int check_try_err(const char *request, int n_args, char *aux_guess, int *trial_num) {
+int check_try_err(const char *request, int n_args, char *aux_guess, int trial_num) {
     if (n_args != 6) {
+        printf("Invalid number of arguments\n");
+        return -1;
+    }
+
+    if (trial_num < 0 || trial_num > MAX_TRIALS) {
+        printf("Invalid trial number\n");
         return -1;
     }
 

@@ -3,7 +3,7 @@
 #include "../../include/globals.h"
 
 int handle_exit(const char *input) {
-    if (sscanf(input, "exit") != 0) {
+    if (strcmp(input,"exit") != 0) {
         return invalid_command_format(CMD_EXIT);
     }
 

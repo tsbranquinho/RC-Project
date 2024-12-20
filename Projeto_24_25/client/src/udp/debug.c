@@ -3,13 +3,18 @@
 #include "../../include/globals.h"
 
 int handle_debug(const char *input) {
-    char plid[7];
+    char plid[MAX_COMMAND_SIZE];
     unsigned int max_playtime;
     char code[2*MAX_COLORS];
     memset(plid, 0, sizeof(plid));
     memset(code, 0, sizeof(code));
+    code[2*MAX_COLORS-1] = '\0';
+    code[1] = ' ';
+    code[3] = ' ';
+    code[5] = ' ';
 
-    if (sscanf(input, "debug %s %u %[^\n]", plid, &max_playtime, code) != 3) {
+    char extra;
+    if (sscanf(input, "debug %s %u %c %c %c %c %c", plid, &max_playtime, &code[0], &code[2], &code[4], &code[6], &extra) != 6) {
         return invalid_command_format(CMD_DEBUG);
     }
 

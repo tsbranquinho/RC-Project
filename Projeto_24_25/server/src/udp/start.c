@@ -6,7 +6,8 @@ int handle_start_request(char *request, struct sockaddr_in *client_addr, socklen
     char plid[ID_SIZE + 1];
     int max_time;
 
-    if (sscanf(request, "SNG %6s %3d", plid, &max_time) != 2 || max_time <= 0 || max_time > MAX_PLAYTIME) {
+    char extra;
+    if (sscanf(request, "SNG %6s %3d %c", plid, &max_time, &extra) != 2 || max_time <= 0 || max_time > MAX_PLAYTIME) {
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
         return ERROR;
     }
@@ -25,7 +26,7 @@ int handle_start_request(char *request, struct sockaddr_in *client_addr, socklen
             return ERROR;
         }
 
-        send_udp_response("RSG NOK\n", client_addr, client_addr_len, udp_socket);        
+        send_udp_response("RSG NOK\n", client_addr, client_addr_len, udp_socket);
         mutex_unlock(plid_mutex);
         set_verbose_start_message(request, plid, max_time);
         return SUCCESS;
