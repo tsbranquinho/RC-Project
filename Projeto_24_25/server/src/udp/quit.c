@@ -57,7 +57,9 @@ int handle_quit_request(char *request, struct sockaddr_in *client_addr, socklen_
 int end_game(Player *player, pthread_mutex_t *plid_mutex) {
     FILE *file = fopen(player->current_game->filename, "a");
     if (file == NULL) {
-        perror("fopen");
+        if (settings.verbose_mode) {
+            perror("Error opening file");
+        }
         return -1;
     }
     time_t last_time;
@@ -86,7 +88,9 @@ int end_game(Player *player, pthread_mutex_t *plid_mutex) {
 
     snprintf(directory, sizeof(directory), "GAMES/%s", player->plid);
     if (mkdir(directory, 0777) == -1 && errno != EEXIST) {
-        perror("Error creating directory");
+        if (settings.verbose_mode) {
+            perror("Error creating directory");
+        }
         mutex_unlock(plid_mutex);
         return -1;
     }
@@ -97,7 +101,9 @@ int end_game(Player *player, pthread_mutex_t *plid_mutex) {
         current_time->tm_hour, current_time->tm_min, current_time->tm_sec, player->current_game->end_status);
 
     if (rename(player->current_game->filename, buffer) == -1) {
-        perror("Error moving file");
+        if (settings.verbose_mode) {
+            perror("Error moving file");
+        }
         mutex_unlock(plid_mutex);
         return -1;
     }
@@ -137,7 +143,9 @@ int score_game(Player *player) {
         current_time->tm_hour, current_time->tm_min, current_time->tm_sec);
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
-        perror("fopen");
+        if (settings.verbose_mode) {
+            perror("Error opening file");
+        }
         pthread_rwlock_unlock(&scoreboard_lock);
         return -1;
     }
@@ -147,7 +155,6 @@ int score_game(Player *player) {
     snprintf(buffer, sizeof(buffer), "%03d %s %s %d %s\n",
         score, player->plid, player->current_game->secret_key, player->current_game->trial_count, mode);
     if (fwrite(buffer, 1, strlen(buffer), file) != strlen(buffer)) {
-        perror("fwrite");
         fclose(file);
         pthread_rwlock_unlock(&scoreboard_lock);
         return -1;

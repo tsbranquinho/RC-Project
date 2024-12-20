@@ -6,7 +6,9 @@ int select_handler() {
     int max_fd = settings.udp_socket > settings.tcp_socket ? settings.udp_socket : settings.tcp_socket;
     settings.temp_fds = settings.read_fds;
     if (select(max_fd + 1, &settings.temp_fds, NULL, NULL, &settings.timeout) < 0) {
-        perror("Select failed");
+        if (settings.verbose_mode) {
+            perror("Select failed");
+        }
         return -1;
     }
     return 0;

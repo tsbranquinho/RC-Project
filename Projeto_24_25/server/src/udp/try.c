@@ -250,7 +250,9 @@ void create_trial(Player *player, char *guess, int black, int white) {
     Trials *trial = malloc(sizeof(Trials));
 
     if(!trial) {
-        perror("Error allocating memory");
+        if (settings.verbose_mode) {
+            perror("Failed to create trial");
+        }
         return;
     }
 
@@ -266,7 +268,9 @@ int write_try_to_file(Player *player, char *guess, int black, int white) {
     create_trial(player, guess, black, white);
     FILE *fp = fopen(player->current_game->filename, "a");
     if (!fp) {
-        perror("Error opening file");
+        if (settings.verbose_mode) {
+            perror("Error opening file");
+        }
         return ERROR;
     }
     char buffer[128];
@@ -274,7 +278,9 @@ int write_try_to_file(Player *player, char *guess, int black, int white) {
     snprintf(buffer, sizeof(buffer), "T: %s %d %d %ld\n",
             guess, black, white, player->current_game->last_time - player->current_game->start_time);
     if (fwrite(buffer, 1, strlen(buffer), fp) != strlen(buffer)) {
-        perror("Error writing to file");
+        if (settings.verbose_mode) {
+            perror("Error writing to file");
+        }
         fclose(fp);
         return ERROR;
     }

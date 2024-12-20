@@ -36,7 +36,9 @@ int handle_start_request(char *request, struct sockaddr_in *client_addr, socklen
     if (player == NULL) {
         player = create_player(plid);
         if (!player) {
-            fprintf(stderr, "Failed to create player %s\n", plid);
+            if (settings.verbose_mode) {
+                perror("Failed to create player");
+            }
             send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
             return ERROR;
         }
@@ -65,7 +67,9 @@ int handle_start_request(char *request, struct sockaddr_in *client_addr, socklen
     strncpy(player->current_game->filename, filename, sizeof(player->current_game->filename));
     FILE *fp = fopen(filename, "w");
     if (!fp) {
-        perror("Error creating file");
+        if (settings.verbose_mode) {
+            perror("Failed to create game file");
+        }
 
         mutex_unlock(plid_mutex);
 

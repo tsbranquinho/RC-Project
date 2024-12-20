@@ -53,6 +53,8 @@ Rafael Avelar - ist1106546
 #### **Note**  
 - Running the server with `./GS` will create files and directories in the **main directory**.  
 - Running `./server/GS` or `make` will create files and directories in the **child directory**.
+- If you want information about what's happening on the server side, run it in verbose mode (-v), otherwise it won't show
+anything except for when the server is closing
 
 ---
 

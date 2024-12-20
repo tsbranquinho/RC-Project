@@ -9,7 +9,6 @@ pthread_mutex_t *get_plid_mutex(const char *plid) {
     if (lock_table_plid[index] == NULL) {
         lock_table_plid[index] = malloc(sizeof(pthread_mutex_t));
         if (!lock_table_plid[index]) {
-            perror("Failed to allocate memory for PLID mutex");
             pthread_mutex_unlock(&lock_table_mutex);
             return NULL;
         }
@@ -83,7 +82,6 @@ void remove_player(const char *plid, pthread_mutex_t *plid_mutex) {
 Player *create_player(const char *plid) {
     Player *player = malloc(sizeof(Player));
     if (!player) {
-        perror("Failed to allocate memory for Player");
         return NULL;
     }
 

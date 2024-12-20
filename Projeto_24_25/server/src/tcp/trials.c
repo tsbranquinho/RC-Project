@@ -46,7 +46,9 @@ int handle_trials_request(int tcp_socket, char *request) {
     FILE *file = fopen(filename, "r");
 
     if (file == NULL) {
-        perror("fopen");
+        if (settings.verbose_mode) {
+            perror("Failed to open file");
+        }
         send_tcp_response("RST ERR\n", tcp_socket);
         mutex_unlock(plid_mutex);
         return ERROR;
@@ -64,6 +66,9 @@ int handle_trials_request(int tcp_socket, char *request) {
     time(&current_time);
     char trash[1024];
     if (fgets(trash, 1024, file) == NULL) {
+        if (settings.verbose_mode) {
+            perror("Failed to read from file");
+        }
         send_tcp_response("RST ERR\n", tcp_socket);
         fclose(file);
         mutex_unlock(plid_mutex);
@@ -78,7 +83,6 @@ int handle_trials_request(int tcp_socket, char *request) {
     }
     char *last_num = strrchr(trash, ' ');
     if (last_num == NULL) {
-        perror("strrchr");
         send_tcp_response("RST ERR\n", tcp_socket);
         fclose(file);
         mutex_unlock(plid_mutex);
@@ -141,7 +145,9 @@ int find_last_game(char *PLID, char *buffer) {
         if (strlen(filelist[i]->d_name) >= 15 && isdigit(filelist[i]->d_name[0])) {
             int written = snprintf(latest_file, sizeof(latest_file), "%s/%s", dirname, filelist[i]->d_name);
             if (written < 0 || written >= sizeof(latest_file)) {
-                fprintf(stderr, "Error: File path too long!\n");
+                if (settings.verbose_mode) {
+                    perror("File name too long");
+                }
                 free(filelist[i]);
                 continue;
             }
@@ -153,7 +159,9 @@ int find_last_game(char *PLID, char *buffer) {
 
     FILE *file = fopen(latest_file, "r");
     if (!file) {
-        perror("fopen");
+        if (settings.verbose_mode) {
+            perror("Failed to open file");
+        }
         return 0;
     }
 

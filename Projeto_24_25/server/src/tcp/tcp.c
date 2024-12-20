@@ -48,11 +48,15 @@ int tcp_handler(char *buffer, int client_socket, struct sockaddr_in client_addr)
     int n = read_tcp_socket(client_socket, buffer, 4);
     if (n < 0) {
         if (errno == EWOULDBLOCK || errno == EAGAIN) {
-            perror("Timeout");
+            if (settings.verbose_mode) {
+                perror("Timeout");
+            }
             close(client_socket);
             return ERROR;
         }
-        perror("Failed to read from TCP socket");
+        if (settings.verbose_mode) {
+            perror("ERROR: Failed to read from socket");
+        }
         close(client_socket);
         return ERROR;
     }

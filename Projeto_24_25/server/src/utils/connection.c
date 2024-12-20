@@ -33,13 +33,17 @@ void setup_server() {
 
     if (stat("GAMES", &st) == -1) {
         if (mkdir("GAMES", 0777) == -1) {
-            perror("Error creating GAMES directory");
+            if (settings.verbose_mode) {
+                perror("Error creating GAMES directory");
+            }
             exit(EXIT_FAILURE);
         }
     }
     if (stat("SCORES", &st) == -1) {
         if (mkdir("SCORES", 0777) == -1) {
-            perror("Error creating SCORES directory");
+            if (settings.verbose_mode) {
+                perror("Error creating SCORES directory");
+            }
             exit(EXIT_FAILURE);
         }
     }
@@ -77,11 +81,15 @@ void create_tcp_socket() {
     };
     
     if (settings.tcp_socket < 0) {
-        perror("Socket creation failed");
+        if (settings.verbose_mode) {
+            perror("Socket creation failed");
+        }
         exit(EXIT_FAILURE);
     }
     if (setsockopt(settings.tcp_socket, SOL_SOCKET, SO_REUSEADDR, &test, sizeof(test)) < 0) {
-        perror("Error setting socket timeout");
+        if (settings.verbose_mode) {
+            perror("Socket option failed");
+        }
 
         pthread_mutex_lock(&fd_mutex);
         close(settings.tcp_socket);
@@ -90,12 +98,16 @@ void create_tcp_socket() {
     }
 
     if (bind(settings.tcp_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Socket bind failed");
+        if (settings.verbose_mode) {
+            perror("Socket bind failed");
+        }
         exit(EXIT_FAILURE);
     }
 
     if (listen(settings.tcp_socket, 5) < 0) {
-        perror("TCP listen failed");
+        if (settings.verbose_mode) {
+            perror("Socket listen failed");
+        }
         exit(EXIT_FAILURE);
     }
 }
@@ -109,12 +121,16 @@ void create_udp_socket() {
     };
 
     if (settings.udp_socket < 0) {
-        perror("Socket creation failed");
+        if (settings.verbose_mode) {
+            perror("Socket creation failed");
+        }
         exit(EXIT_FAILURE);
     }
 
     if (bind(settings.udp_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Socket bind failed");
+        if (settings.verbose_mode) {
+            perror("Socket bind failed");
+        }
         exit(EXIT_FAILURE);
     }
 }
@@ -125,7 +141,9 @@ void thread_configuration() {
 
     threads = malloc(sizeof(pthread_t) * num_threads);
     if (threads == NULL) {
-        perror("Thread pool allocation failed");
+        if (settings.verbose_mode) {
+            perror("Error creating threads");
+        }
         exit(EXIT_FAILURE);
     }
 

@@ -9,7 +9,9 @@ pthread_mutex_t *mutex_plid(const char *plid) {
 
     pthread_mutex_t *plid_mutex = get_plid_mutex(plid);
     if (!plid_mutex) {
-        fprintf(stderr, "Failed to acquire lock for player %s\n", plid);
+        if (settings.verbose_mode) {
+            perror("Failed to get mutex for plid");
+        }
         return NULL;
     }
 
