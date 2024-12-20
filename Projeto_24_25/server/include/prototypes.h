@@ -26,7 +26,7 @@ void generate_random_key(char *key);
 void set_verbose_start_message(char* request, const char* plid, int max_time);
 //try.c
 int handle_try_request(char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
-int check_try_err(const char *request, int n_args, char *aux_guess, int *trial_num);
+int check_try_err(const char *request, int n_args, char *aux_guess, int trial_num);
 int check_try_nok(const char *plid, Player *player);
 int check_try_etm(Player *player, char* response);
 int check_try_inv(Player *player, int trial_num, char *guess);
@@ -43,6 +43,7 @@ int score_game(Player *player);
 void set_verbose_quit_message(char* request, const char* plid);
 //debug.c
 int handle_debug_request(char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
+int valid_key(const char *key);
 void set_verbose_debug_message(char *request, const char *plid, int max_time, const char *key);
 //trials.c
 int handle_trials_request(int tcp_socket, char *buffer);
