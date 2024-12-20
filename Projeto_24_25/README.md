@@ -1,6 +1,8 @@
-# Projeto RC
+# Projeto RC - Group 67
 
-This project implements a **client-server application** with various commands for managing and interacting with a game system over a network.
+This project implements a **client-server application** with various commands for managing and interacting with a game system (Mastermind) over a network. \
+Tiago Branquinho - ist1106635 \
+Rafael Avelar - ist1106546
 
 ---
 
@@ -133,7 +135,3 @@ The following commands are implemented on the server:
 | `hint`      | Provide a hint to the client      | ✅ Completed |
 
 ---
-
-ssh sigma.ist.utl.pt -l ist1106635
-scp -r  Projeto_24_25/ ist1106635@sigma.tecnico.ulisboa.pt:~/Branquinho2
-echo "193.136.128.108 58067 10" | tr -d '\r' | nc tejo.tecnico.ulisboa.pt 59000 > reports/report10.html
