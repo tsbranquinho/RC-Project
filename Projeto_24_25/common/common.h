@@ -1,8 +1,8 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-#define GROUP_NUMBER 67                          // FIXME: Replace with your group number
-#define DEFAULT_PORT (58000 + GROUP_NUMBER)     // FIXME - Default GROUP NUMBER
+#define GROUP_NUMBER 67                          
+#define DEFAULT_PORT (58000 + GROUP_NUMBER)   
 #define DEFAULT_IP "127.0.0.1"      // Default IP if not specified -> localhost
 #define ID_SIZE 6                   // Size of player ID
 #define MAX_PLAYTIME 600            // Maximum playtime in seconds

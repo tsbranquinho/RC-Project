@@ -1,1 +1,1 @@
-OK scores.txt 23 795 10
+OK scores.txt 23 498 10

@@ -91,16 +91,16 @@ int end_game(Player *player, pthread_mutex_t *plid_mutex) {
 }
 
 int score_game(Player *player) {
-    int score = 1000; //TODO descobrir como calcular o score, vou inventar um bocado
+    int score = 1000;
     score -= (player->current_game->trial_count - 1) * 100;
     score -= (player->current_game->last_time - player->current_game->start_time) / 3;
+    score -= player->current_game->hint_count * 125;
     if (score < 1) {
         score = 1;
     }
     if (score > 999) {
         score = 999;
     }
-
 
     struct tm *current_time = gmtime(&player->current_game->last_time);
     char mode[6];

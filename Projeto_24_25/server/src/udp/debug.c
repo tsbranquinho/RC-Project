@@ -9,8 +9,6 @@ int handle_debug_request(char *request, struct sockaddr_in *client_addr, socklen
     memset(plid, 0, sizeof(plid));
     memset(aux, 0, sizeof(aux));
 
-    //TODO verificar se isto está bem
-
     if (sscanf(request, "DBG %6s %3d %c %c %c %c", plid, &max_time, &aux[0], &aux[1], &aux[2], &aux[3]) != 6 || max_time <= 0 || max_time > MAX_PLAYTIME) {
         send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
         return ERROR;
@@ -65,7 +63,6 @@ int handle_debug_request(char *request, struct sockaddr_in *client_addr, socklen
     player->current_game->mode = DEBUG;
     strncpy(player->current_game->secret_key, aux, MAX_COLORS+1);
 
-    //TODO create file
     //GAME_XXXXXX.txt
     char filename[GAME_FILE_NAME_SIZE+6]; // 6 for "GAMES/"
     snprintf(filename, sizeof(filename), "GAMES/GAME_%s.txt", plid);

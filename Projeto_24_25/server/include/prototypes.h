@@ -3,7 +3,16 @@
 
 #include "constants.h"
 
-void usage(const char *progname);
+//connections.c
+void get_arguments(int argc, char *argv[]);
+void setup_server();
+void create_tcp_socket();
+void create_udp_socket();
+void thread_configuration();
+//socket_manager.c
+int select_handler();
+void udp_connection();
+void tcp_connection();
 //udp.c
 void send_udp_response(const char *message, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
 int udp_handler(char* buffer, struct sockaddr_in client_addr, socklen_t client_addr_len);
@@ -35,6 +44,13 @@ void set_verbose_quit_message(char* request, const char* plid);
 //debug.c
 int handle_debug_request(char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
 void set_verbose_debug_message(char *request, const char *plid, int max_time, const char *key);
+//trials.c
+int handle_trials_request(int tcp_socket, char *buffer);
+int find_last_game(char *PLID, char *filename);
+void set_verbose_trials_message(char *request, const char *plid);
+//scoreboard.c
+int handle_scoreboard_request(int tcp_socket, char *buffer);
+void find_top_scores(char* buffer);
 //player.c
 pthread_mutex_t *get_plid_mutex(const char *plid);
 void cleanup_plid_mutex(const char *plid);
@@ -49,17 +65,9 @@ void clean_server();
 void clean_game(Game *game);
 //error.c
 void delete_directory_contents(const char *path);
+void cleanup_server();
 void sig_detected(int sig);
-
-int handle_trials_request(int tcp_socket, char *buffer);
-int find_last_game(char *PLID, char *filename);
-void set_verbose_trials_message(char *request, const char *plid);
-
-int handle_scoreboard_request(int tcp_socket, char *buffer);
-void find_top_scores(char* buffer);
-
-//TODO tirar threads da main
-
+//threads.c
 pthread_mutex_t *mutex_plid(const char *plid);
 void mutex_unlock(pthread_mutex_t *plid_mutex);
 void handle_task(Task task);
@@ -68,22 +76,11 @@ void task_queue_init(TaskQueue *queue);
 void task_queue_push(TaskQueue *queue, Task task);
 Task task_queue_pop(TaskQueue *queue);
 void sig_detected(int signo);
-void usage(const char *progname);
 void kill_sig(int signo);
-void print_debug(int value); //TODO remove
-
+//usage.c
+void usage(const char *progname);
+//hint.c
 int handle_hint_request(char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket);
 void set_verbose_hint_message(char *request, const char *plid, int hint);
-
-void get_arguments(int argc, char *argv[]);
-void setup_server();
-void create_tcp_socket();
-void create_udp_socket();
-void thread_configuration();
-
-int select_handler();
-void udp_connection();
-void tcp_connection();
-
 
 #endif
