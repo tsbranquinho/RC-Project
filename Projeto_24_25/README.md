@@ -105,13 +105,13 @@ The following commands are implemented in the client:
 | `try`       | Submit a guess                    | ✅ Completed |
 | `quit`      | Quit the current game session     | ✅ Completed |
 | `exit`      | Exit the client application       | ✅ Completed |
-| `debug`     | Enable/disable debug mode         | ✅ Completed |
+| `debug`     | Start a game session in debug mode| ✅ Completed |
 | `trials`    | Fetch the trial history           | ✅ Completed |
 | `scoreboard`| View the game scoreboard          | ✅ Completed |
 | **Extras**  |                                   |             |
 | `set`       | Set the player ID (takes `plid`)  | ✅ Completed |
 | `clean`     | Clear game data                   | ✅ Completed |
-| `sleep`     | Pause for a specified time (ms)   | ✅ Completed |
+| `sleep`     | Pause for a specified time (s)    | ✅ Completed |
 | `hint`      | Get a hint for the current game   | ✅ Completed |
 
 ---
@@ -125,7 +125,7 @@ The following commands are implemented on the server:
 | `start`     | Start a new game session          | ✅ Completed |
 | `try`       | Process a player's guess          | ✅ Completed |
 | `quit`      | End a game session                | ✅ Completed |
-| `debug`     | Enable/disable debug mode         | ✅ Completed |
+| `debug`     | Start a game session in debug mode| ✅ Completed |
 | `trials`    | Send trial history to the client  | ✅ Completed |
 | `scoreboard`| Provide the game scoreboard       | ✅ Completed |
 | **Extras**  |                                   |             |
