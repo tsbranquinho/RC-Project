@@ -82,6 +82,11 @@ void handle_task(Task task) {
             char client_ip[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, &task.client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
             printf("Received message from %s:%d\n", client_ip, ntohs(task.client_addr.sin_port));
+            if (status == ERROR) {
+                printf("Something went wrong with the request: %s", task.buffer);
+            } else {
+                printf("%s\n", task.buffer);
+            }
         }
     } else {
         int status = udp_handler(task.buffer, task.client_addr, task.addr_len);

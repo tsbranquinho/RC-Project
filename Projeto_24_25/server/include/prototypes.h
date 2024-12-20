@@ -51,11 +51,12 @@ void clean_game(Game *game);
 void delete_directory_contents(const char *path);
 void sig_detected(int sig);
 
-void handle_trials_request(int tcp_socket);
-int FindLastGame(char *PLID, char *filename);
+int handle_trials_request(int tcp_socket, char *buffer);
+int find_last_game(char *PLID, char *filename);
+void set_verbose_trials_message(char *request, const char *plid);
 
-void handle_scoreboard_request(int tcp_socket);
-int FindTopScores(char* buffer);
+int handle_scoreboard_request(int tcp_socket, char *buffer);
+void find_top_scores(char* buffer);
 
 //TODO tirar threads da main
 

@@ -5,7 +5,6 @@
 void send_tcp_response(char *message, int tcp_socket) {
     ssize_t n = strlen(message);
     char* pointer = message;
-    printf("Sending message: %s\n", message);
 
     pthread_mutex_lock(&fd_mutex);
     while (n > 0) {
@@ -59,13 +58,21 @@ int tcp_handler(char *buffer, int client_socket, struct sockaddr_in client_addr)
     }
 
     if (strcmp(buffer, "STR") == 0) {
-        handle_trials_request(client_socket);
+        if (handle_trials_request(client_socket, buffer) < 0) {
+            close(client_socket);
+            return ERROR;
+        }
     }
     else if (strcmp(buffer, "SSB") == 0) {
-        handle_scoreboard_request(client_socket);
+        if (handle_scoreboard_request(client_socket, buffer) < 0) {
+            close(client_socket);
+            return ERROR;
+        }
     }
     else {
         send_tcp_response("ERR\n", client_socket);
+        close(client_socket);
+        return ERROR;
     }
     close(client_socket);
     return SUCCESS;
