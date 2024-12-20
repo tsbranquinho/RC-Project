@@ -18,8 +18,6 @@ void send_tcp_response(char *message, int tcp_socket) {
         pointer += bytes;
     }
     shutdown(tcp_socket, SHUT_WR); // Indica que o servidor terminou de enviar dados
-    
-    close(tcp_socket);
     pthread_mutex_unlock(&fd_mutex);
 }
 
@@ -44,4 +42,31 @@ int read_tcp_socket(int fd, char *buffer, size_t size) {
     pthread_mutex_unlock(&fd_mutex);
     buffer[bytes_read] = '\0'; // Null-terminate the response
     return 0;
+}
+
+int tcp_handler(char *buffer, int client_socket, struct sockaddr_in client_addr) {
+    memset(buffer, 0, SMALL_BUFFER);
+    int n = read_tcp_socket(client_socket, buffer, 4); 
+    if (n < 0) {
+        if (errno == EWOULDBLOCK || errno == EAGAIN) {
+            perror("Timeout");
+            close(client_socket);
+            return ERROR;
+        }
+        perror("Failed to read from TCP socket");
+        close(client_socket);
+        return ERROR;
+    }
+
+    if (strcmp(buffer, "STR") == 0) {
+        handle_trials_request(client_socket);
+    }
+    else if (strcmp(buffer, "SSB") == 0) {
+        handle_scoreboard_request(client_socket);
+    }
+    else {
+        send_tcp_response("ERR\n", client_socket);
+    }
+    close(client_socket);
+    return SUCCESS;
 }

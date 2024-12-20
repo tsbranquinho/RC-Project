@@ -2,7 +2,7 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
-void handle_try_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
+int handle_try_request(char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
     char plid[ID_SIZE + 100];
     char aux_guess[2*MAX_COLORS]; // will be stored in check_try_err
     int trial_num;
@@ -16,18 +16,8 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
 
 
     if (check_try_err(request, n_args, aux_guess, &trial_num) < 0) {
-        if(settings.verbose_mode) {
-            printf("Message: %s\n", request);
-            fprintf(stderr, "Invalid try request\n");
-        }
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
-    }
-
-    if(settings.verbose_mode) {
-        printf("PLID: %s\n", plid);
-        printf("Trial number: %d\n", trial_num);
-        printf("Guess: %s\n", aux_guess);
+        return ERROR;
     }
 
     char guess[MAX_COLORS + 1];
@@ -40,13 +30,14 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     Player *player = find_player(plid);
     if (check_try_nok(plid, player) < 0) {
         send_udp_response("RTR NOK\n", client_addr, client_addr_len, udp_socket);
-        return;
+        set_verbose_try_message(request, plid, trial_num, aux_guess);
+        return SUCCESS;
     }
 
     pthread_mutex_t *plid_mutex = mutex_plid(plid);
     if (!plid_mutex) {
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
+        return ERROR;
     }
 
     player->current_game->trial_count++;
@@ -57,7 +48,8 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
     if (check_try_etm(player, response) < 0) {
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
         end_game(player, plid_mutex);
-        return;
+        set_verbose_try_message(request, plid, trial_num, aux_guess);
+        return SUCCESS;
     }
 
     //INV
@@ -66,42 +58,46 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         send_udp_response("RTR INV\n", client_addr, client_addr_len, udp_socket);
         player->current_game->trial_count--;
         mutex_unlock(plid_mutex);
-        return;
+        set_verbose_try_message(request, plid, trial_num, aux_guess);
+        return SUCCESS;
     }
     else if (ret == 1) {
         snprintf(response, sizeof(response), "RTR OK %d %d %d\n", trial_num, player->current_game->trial->black, player->current_game->trial->white);
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
         player->current_game->trial_count--;
         mutex_unlock(plid_mutex);
-        return;
+        set_verbose_try_message(request, plid, trial_num, aux_guess);
+        return SUCCESS;
     }
 
     //DUP
     if (check_try_dup(player, guess) < 0) {
         send_udp_response("RTR DUP\n", client_addr, client_addr_len, udp_socket);
         mutex_unlock(plid_mutex);
-        return;
+        set_verbose_try_message(request, plid, trial_num, aux_guess);
+        return SUCCESS;
     }
 
     //ENT
     if (check_try_ent(player, response, plid_mutex) < 0) {
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
         mutex_unlock(plid_mutex);
-        return;
+        set_verbose_try_message(request, plid, trial_num, aux_guess);
+        return SUCCESS;
     }
 
     if (calculate_feedback(guess, player->current_game->secret_key, &black, &white) < 0) {
         player->current_game->trial_count--;
-        send_udp_response("RTR ERR\n \0", client_addr, client_addr_len, udp_socket);
+        send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         mutex_unlock(plid_mutex);
-        return;
+        return ERROR;
     }
     
     if (write_try_to_file(player, guess, black, white) < 0) {
         player->current_game->trial_count--;
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         mutex_unlock(plid_mutex);
-        return;
+        return ERROR;
     }
 
     if (black == MAX_COLORS) {
@@ -111,14 +107,16 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
         score_game(player);
         end_game(player, plid_mutex);
         send_udp_response(response, client_addr, client_addr_len, udp_socket);
-        return;
+        set_verbose_try_message(request, plid, trial_num, aux_guess);
+        return SUCCESS;
     } else {
         if (player->current_game->trial_count == MAX_TRIALS) {
             player->current_game->trial_count++; //Está errado e excedemos o limite de tentativas
             if (check_try_ent(player, response, plid_mutex) < 0) {
                 send_udp_response(response, client_addr, client_addr_len, udp_socket);
                 mutex_unlock(plid_mutex);
-                return;
+                set_verbose_try_message(request, plid, trial_num, aux_guess);
+                return SUCCESS;
             }
         }
         snprintf(response, sizeof(response), "RTR OK %d %d %d\n", trial_num, black, white);
@@ -126,6 +124,8 @@ void handle_try_request(const char *request, struct sockaddr_in *client_addr, so
 
     send_udp_response(response, client_addr, client_addr_len, udp_socket);
     mutex_unlock(plid_mutex);
+    set_verbose_try_message(request, plid, trial_num, aux_guess);
+    return SUCCESS;
 }
 
 int check_try_err(const char *request, int n_args, char *aux_guess, int *trial_num) {
@@ -274,5 +274,9 @@ int write_try_to_file(Player *player, char *guess, int black, int white) {
     }
     fclose(fp);
     return 0;
+}
 
+void set_verbose_try_message(char* request, const char* plid, int trial_num, const char* guess) {
+    memset(request, 0, strlen(request));
+    sprintf(request, "Try request: PLID = %s, trial_num = %d, guess = %s\n", plid, trial_num, guess);
 }

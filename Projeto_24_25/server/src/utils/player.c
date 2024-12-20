@@ -40,7 +40,6 @@ Player *find_player(const char *plid) {
 
     while (current != NULL) {
         if (strcmp(current->plid, plid) == 0) {
-            printf("Player with ID %s found\n", plid);
             pthread_rwlock_unlock(&hash_table_lock);
             return current;
         }
@@ -48,7 +47,6 @@ Player *find_player(const char *plid) {
     }
 
     pthread_rwlock_unlock(&hash_table_lock);
-    printf("Player with ID %s not found\n", plid);
     return NULL;
 }
 
@@ -67,8 +65,6 @@ void remove_player(const char *plid, pthread_mutex_t *plid_mutex) {
                 prev->next = current->next;
             }
 
-            printf("Player with ID %s removed\n", plid);
-
             pthread_rwlock_unlock(&hash_table_lock);
             mutex_unlock(plid_mutex);
             cleanup_plid_mutex(plid);
@@ -82,7 +78,6 @@ void remove_player(const char *plid, pthread_mutex_t *plid_mutex) {
     }
 
     pthread_rwlock_unlock(&hash_table_lock);
-    printf("Player with ID %s could not be removed\n", plid);
 }
 
 Player *create_player(const char *plid) {
@@ -146,9 +141,7 @@ int valid_plid(const char *plid) {
 }
 
 void clean_game(Game *game) {
-    printf("Cleaning game\n");
     while(game->trial != NULL) {
-        printf("Cleaning trial\n");
         Trials *next = game->trial->prev;
         free(game->trial);
         game->trial = next;
@@ -161,7 +154,6 @@ void clean_server() {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         Player *current = hash_table[i];
         while (current != NULL) {
-            printf("Cleaning player %s\n", current->plid);
             clean_game(current->current_game);
             Player *next = current->next;
             cleanup_plid_mutex(current->plid);

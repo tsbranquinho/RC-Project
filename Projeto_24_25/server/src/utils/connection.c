@@ -6,6 +6,7 @@ void get_arguments(int argc, char *argv[]) {
 
     int opt;
     settings.GSport = DEFAULT_PORT;
+    settings.verbose_mode = 0;
 
     while ((opt = getopt(argc, argv, "p:v")) != -1) {
         switch (opt) {
@@ -18,6 +19,7 @@ void get_arguments(int argc, char *argv[]) {
                 break;
             case 'v':
                 settings.verbose_mode = 1;
+                printf("Verbose mode enabled\n");
                 break;
             default:
                 usage(argv[0]);
@@ -27,7 +29,6 @@ void get_arguments(int argc, char *argv[]) {
 }
 
 void setup_server() {
-    settings.verbose_mode = 0;
     struct stat st;
 
     if (stat("GAMES", &st) == -1) {
@@ -43,14 +44,15 @@ void setup_server() {
         }
     }
 
-    printf("Starting Game Server on port: %d\n", settings.GSport);
-
     task_queue_init(&task_queue);
 
     create_udp_socket();
     create_tcp_socket();
 
-    printf("Game Server is running.\n");
+    if (settings.verbose_mode) {
+        printf("Starting Game Server on port: %d\n", settings.GSport);
+        printf("Game Server is running.\n");
+    }
 
     thread_configuration();
 
@@ -120,7 +122,6 @@ void create_udp_socket() {
 void thread_configuration() {
     num_threads = sysconf(_SC_NPROCESSORS_ONLN) * 2;
     if (num_threads <= 0) num_threads = 1;
-    printf("Number of threads: %d\n", num_threads);
 
     threads = malloc(sizeof(pthread_t) * num_threads);
     if (threads == NULL) {

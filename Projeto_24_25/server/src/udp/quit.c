@@ -2,41 +2,31 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
-void handle_quit_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
+int handle_quit_request(char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
     char plid[ID_SIZE + 1];
 
     if (sscanf(request, "QUT %6s", plid) != 1) {
-        
-        if(settings.verbose_mode) {
-            printf("%s\n", request);
-            printf("Received invalid QUT request\n");
-        }
-        send_udp_response("RQT ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
-    }
 
-    if(settings.verbose_mode) {
-        printf("Received QUT request from %s\n", plid);
+        send_udp_response("RQT ERR\n", client_addr, client_addr_len, udp_socket);
+        return ERROR;
     }
 
     if(!valid_plid(plid)) {
-        if(settings.verbose_mode) {
-            printf("Invalid plid\n");
-        }
         send_udp_response("RQT ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
+        return ERROR;
     }
 
     Player *player = find_player(plid);
     if (!player) {
         send_udp_response("RQT NOK\n", client_addr, client_addr_len, udp_socket);
-        return;
+        set_verbose_quit_message(request, plid);
+        return SUCCESS;
     }
 
     pthread_mutex_t *plid_mutex = mutex_plid(plid);
     if (!plid_mutex) {
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
+        return ERROR;
     }
 
     char response[SMALL_BUFFER];
@@ -46,10 +36,12 @@ void handle_quit_request(const char *request, struct sockaddr_in *client_addr, s
     snprintf(response, sizeof(response), "RQT OK %s\n", temp);
     if (end_game(player, plid_mutex) == -1) {
         send_udp_response("RQT ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
+        return ERROR;
     }
 
     send_udp_response(response, client_addr, client_addr_len, udp_socket);
+    set_verbose_quit_message(request, plid);
+    return SUCCESS;
 }
 
 int end_game(Player *player, pthread_mutex_t *plid_mutex) {
@@ -147,4 +139,9 @@ int score_game(Player *player) {
 
     pthread_rwlock_unlock(&scoreboard_lock);
     return 0;
+}
+
+void set_verbose_quit_message(char* request, const char* plid) {
+    memset(request, 0, SMALL_BUFFER);
+    sprintf(request, "Quit request: PLID = %s\n", plid);
 }

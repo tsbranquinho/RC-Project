@@ -18,7 +18,6 @@ void udp_connection() {
     socklen_t addr_len = sizeof(client_addr);
     ssize_t len = recvfrom(settings.udp_socket, buffer, sizeof(buffer) - 1, 0,
                             (struct sockaddr *)&client_addr, &addr_len);
-    printf("Received UDP request: %s\n", buffer);
     if (len > 0) {
         buffer[len] = '\0';
         Task task = {.client_addr = client_addr, .addr_len = addr_len, .is_tcp = 0};

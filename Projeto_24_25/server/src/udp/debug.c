@@ -2,39 +2,24 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
-void handle_debug_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
+int handle_debug_request(char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
     char plid[ID_SIZE + 1];
     int max_time;
-    char key[2*MAX_COLORS];
     char aux[MAX_COLORS+1];
     memset(plid, 0, sizeof(plid));
-    memset(key, 0, sizeof(key));
     memset(aux, 0, sizeof(aux));
 
     //TODO verificar se isto está bem
 
     if (sscanf(request, "DBG %6s %3d %c %c %c %c", plid, &max_time, &aux[0], &aux[1], &aux[2], &aux[3]) != 6 || max_time <= 0 || max_time > MAX_PLAYTIME) {
-        if(settings.verbose_mode) {
-            printf("%s\n", request);
-            fprintf(stderr, "Invalid request\n");
-        }
         send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
+        return ERROR;
     }
 
     if(!valid_plid(plid)) {
-        if(settings.verbose_mode) {
-            printf("Invalid plid\n");
-        }
         send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
+        return ERROR;
     }
-    
-    if(settings.verbose_mode) {
-        printf("DBG %s %d %s\n", plid, max_time, aux);
-    }
-
-    aux[MAX_COLORS] = '\0';
 
     Player *player = find_player(plid);
     if (player != NULL && player->current_game->trial != NULL) {
@@ -42,13 +27,13 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
         pthread_mutex_t *plid_mutex = mutex_plid(plid);
         if (!plid_mutex) {
             send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
-            return;
+            return ERROR;
         }
 
         send_udp_response("RDB NOK\n", client_addr, client_addr_len, udp_socket);
-        
         mutex_unlock(plid_mutex);
-        return;
+        set_verbose_debug_message(request, plid, max_time, aux);
+        return SUCCESS;
     }
 
     
@@ -57,7 +42,7 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
         if (!player) {
             fprintf(stderr, "Failed to create player %s\n", plid);
             send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
-            return;
+            return ERROR;
         }
         insert_player(player);
     }
@@ -65,10 +50,14 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
     pthread_mutex_t *plid_mutex = mutex_plid(plid);
     if (!plid_mutex) {
         send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
+        return ERROR;
     }
 
     player->current_game = malloc(sizeof(Game));
+    if (!player->current_game) {
+        send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
+        return ERROR;
+    }
     player->current_game->start_time = time(NULL);
     player->current_game->trial_count = 0;
     player->current_game->max_time = max_time;
@@ -88,7 +77,7 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
         mutex_unlock(plid_mutex);
 
         send_udp_response("RDB ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
+        return ERROR;
     }
 
     char time_str[20];
@@ -110,4 +99,11 @@ void handle_debug_request(const char *request, struct sockaddr_in *client_addr, 
 
     mutex_unlock(plid_mutex);
     send_udp_response("RDB OK\n", client_addr, client_addr_len, udp_socket);
+    set_verbose_debug_message(request, plid, max_time, aux);
+    return SUCCESS;
+}
+
+void set_verbose_debug_message(char *request, const char *plid, int max_time, const char *key) {
+    memset(request, 0, strlen(request));
+    sprintf(request, "Debug request: PLID = %s, max_time = %d, key = %c %c %c %c\n", plid, max_time, key[0], key[1], key[2], key[3]);
 }

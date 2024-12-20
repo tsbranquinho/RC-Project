@@ -62,7 +62,3 @@ void sig_detected(int sig) {
     printf("Deleted all files and directories.\n");
     exit(0);
 }
-
-void print_debug(int value) {
-    printf("DEBUG: %d\n", value);
-}

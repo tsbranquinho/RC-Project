@@ -20,7 +20,9 @@ pthread_mutex_t *mutex_plid(const char *plid) {
 
 void mutex_unlock(pthread_mutex_t *plid_mutex) {
     if(pthread_mutex_unlock(plid_mutex) != 0) {
-        perror("Error unlocking mutex");
+        if (settings.verbose_mode) {
+            perror("Failed to unlock mutex");
+        }
     }
 }
 
@@ -75,69 +77,25 @@ Task task_queue_pop(TaskQueue *queue) {
 
 void handle_task(Task task) {
     if (task.is_tcp) {
-
-        int client_socket = task.client_socket;
-        char buffer[GLOBAL_BUFFER];
-        struct sockaddr_in client_addr = task.client_addr;
-
-        memset(buffer, 0, sizeof(buffer));
-        int n = read_tcp_socket(client_socket, buffer, 4); 
-        if (n < 0) {
-            if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                perror("Timeout");
-                close(client_socket);
-                exit(0);
-            }
-            perror("Failed to read from TCP socket");
-            close(client_socket);
-            exit(1);
-        }
-        buffer[n-1] = '\0';
-        printf("[DEBUG] Received message: %s\n", buffer);
-
+        int status = tcp_handler(task.buffer, task.client_socket, task.client_addr);
         if (settings.verbose_mode) {
             char client_ip[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
-            printf("Received message from %s:%d\n", client_ip, ntohs(client_addr.sin_port));
+            inet_ntop(AF_INET, &task.client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
+            printf("Received message from %s:%d\n", client_ip, ntohs(task.client_addr.sin_port));
         }
-
-        if (strcmp(buffer, "STR") == 0) {
-            handle_trials_request(client_socket);
-        }
-        else if (strcmp(buffer, "SSB") == 0) {
-            handle_scoreboard_request(client_socket);
-        }
-        else {
-            send_tcp_response("ERR\n", client_socket);
-            close(client_socket);
-        }
-        printf("[TCP] Connection closed\n");
-
     } else {
-
-        char *buffer = task.buffer;
-        struct sockaddr_in client_addr = task.client_addr;
-        socklen_t client_addr_len = task.addr_len;
-
+        int status = udp_handler(task.buffer, task.client_addr, task.addr_len);
         if (settings.verbose_mode) {
             char client_ip[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
-            printf("Received message from %s:%d\n", client_ip, ntohs(client_addr.sin_port));
+            inet_ntop(AF_INET, &task.client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
+            printf("Received message from %s:%d\n", client_ip, ntohs(task.client_addr.sin_port));
+            if (status == ERROR) {
+                printf("Something went wrong with the request: %s", task.buffer);
+            } else {
+                printf("%s\n", task.buffer);
+            }
         }
 
-        if (strncmp(buffer, "SNG", 3) == 0) {
-            handle_start_request(buffer, &client_addr, client_addr_len, settings.udp_socket);
-        } else if (strncmp(buffer, "TRY", 3) == 0) {
-            handle_try_request(buffer, &client_addr, client_addr_len, settings.udp_socket);
-        } else if (strncmp(buffer, "QUT", 3) == 0) {
-            handle_quit_request(buffer, &client_addr, client_addr_len, settings.udp_socket);
-        } else if (strncmp(buffer, "DBG", 3) == 0) {
-            handle_debug_request(buffer, &client_addr, client_addr_len, settings.udp_socket);
-        } else if (strncmp(buffer, "HNT", 3) == 0) {
-            handle_hint_request(buffer, &client_addr, client_addr_len, settings.udp_socket);
-        } else {
-            send_udp_response("ERR\n", &client_addr, client_addr_len, settings.udp_socket);
-        }
     }
 }
 
@@ -145,7 +103,6 @@ void *worker_thread(void *arg) {
     while (1) {
         pthread_mutex_lock(&kill_mutex);
         if (kill_threads) {
-            printf("Thread %ld exiting\n", pthread_self());
             pthread_mutex_unlock(&kill_mutex);
             break;
         }
@@ -176,5 +133,4 @@ void kill_sig(int signo) {
         pthread_join(threads[i], NULL);
     }
 
-    printf("All threads terminated.\n");
 }

@@ -3,7 +3,6 @@
 #include "../../include/globals.h"
 
 void handle_scoreboard_request(int tcp_socket) {
-    printf("[DEBUG] Received SCOREBOARD request\n");
     char buffer[2048];
     memset(buffer, 0, sizeof(buffer));
     FindTopScores(buffer);

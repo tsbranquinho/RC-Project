@@ -2,30 +2,18 @@
 #include "../../include/prototypes.h"
 #include "../../include/globals.h"
 
-void handle_start_request(const char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
+int handle_start_request(char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
     char plid[ID_SIZE + 1];
     int max_time;
 
     if (sscanf(request, "SNG %6s %3d", plid, &max_time) != 2 || max_time <= 0 || max_time > MAX_PLAYTIME) {
-        if (settings.verbose_mode) {
-            printf("Message: %s\n", request);
-            fprintf(stderr, "Invalid start request\n");
-        }
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
+        return ERROR;
     }
 
     if (!valid_plid(plid)) {
-        if (settings.verbose_mode) {
-            printf("Invalid plid\n");
-        }
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
-    }
-    
-    if(settings.verbose_mode) {
-        printf("PLID: %s\n", plid);
-        printf("Max time: %d\n", max_time);
+        return ERROR;
     }
 
     Player *player = find_player(plid);
@@ -34,13 +22,13 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
         pthread_mutex_t *plid_mutex = mutex_plid(plid);
         if (!plid_mutex) {
             send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
-            return;
+            return ERROR;
         }
 
-        send_udp_response("RSG NOK\n", client_addr, client_addr_len, udp_socket);
-        
+        send_udp_response("RSG NOK\n", client_addr, client_addr_len, udp_socket);        
         mutex_unlock(plid_mutex);
-        return;
+        set_verbose_start_message(request, plid, max_time);
+        return SUCCESS;
     }
 
     
@@ -49,7 +37,7 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
         if (!player) {
             fprintf(stderr, "Failed to create player %s\n", plid);
             send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
-            return;
+            return ERROR;
         }
         insert_player(player);
     }
@@ -57,7 +45,7 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
     pthread_mutex_t *plid_mutex = mutex_plid(plid);
     if (!plid_mutex) {
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
+        return ERROR;
     }
 
     player->current_game = malloc(sizeof(Game));
@@ -81,7 +69,7 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
         mutex_unlock(plid_mutex);
 
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
-        return;
+        return ERROR;
     }
 
     char time_str[20];
@@ -103,6 +91,8 @@ void handle_start_request(const char *request, struct sockaddr_in *client_addr, 
 
     mutex_unlock(plid_mutex);
     send_udp_response("RSG OK\n", client_addr, client_addr_len, udp_socket);
+    set_verbose_start_message(request, plid, max_time);
+    return SUCCESS;
 }
 
 void generate_random_key(char *key) {
@@ -120,4 +110,9 @@ void generate_random_key(char *key) {
         key[i] = colors[rand() % num_colors];
     }
     key[MAX_COLORS] = '\0';
+}
+
+void set_verbose_start_message(char* request, const char* plid, int max_time) {
+    memset(request, 0, strlen(request));
+    sprintf(request, "Start request: PLID = %s, max_time = %d\n", plid, max_time);
 }
