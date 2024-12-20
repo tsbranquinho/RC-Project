@@ -44,7 +44,7 @@ void receive_quit_msg(const char *response) {
     }
 
     if (strcmp(status, "OK") == 0 && matched == 5) {
-        printf("Game successfully quit. The secret code was: %s\n", secret_code);
+        printf("Game successfully quit. The secret code was: %c %c %c %c\n", secret_code[0], secret_code[2], secret_code[4], secret_code[6]);
         hasStarted = 0;
     } else if (strcmp(status, "NOK") == 0) {
         printf("No ongoing game found for this player.\n");

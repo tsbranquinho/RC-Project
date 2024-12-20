@@ -3,11 +3,11 @@
 # IP e porta do servidor
 SERVER="tejo.tecnico.ulisboa.pt"
 PORT="59000"
-LOCAL_IP="193.136.128.108"
-LOCAL_PORT="58000"
+LOCAL_IP="193.136.128.104"
+LOCAL_PORT="58067"
 
 # Lista de números a testar
-TEST_NUMBERS=("01" "02" "03" "04" "05" "06" "07" "08" "09" "10" "11"ec)
+TEST_NUMBERS=("01" "02" "03" "04" "05" "06" "07" "08" "09")
 
 # Diretório de saída para os relatórios
 OUTPUT_DIR="reports"

@@ -60,12 +60,19 @@ int tcp_handler(char *buffer, int client_socket, struct sockaddr_in client_addr)
     if (strcmp(buffer, "STR") == 0) {
         if (handle_trials_request(client_socket, buffer) < 0) {
             close(client_socket);
+            char plid[ID_SIZE + 1];
+            memset(plid, 0, sizeof(plid));
+            sscanf(buffer, "%6s", plid);
+            memset(buffer, 0, SMALL_BUFFER);
+            sprintf(buffer, "STR %s\n", plid);
             return ERROR;
         }
     }
     else if (strcmp(buffer, "SSB") == 0) {
         if (handle_scoreboard_request(client_socket, buffer) < 0) {
             close(client_socket);
+            memset(buffer, 0, SMALL_BUFFER);
+            strcpy(buffer, "SSB\n");
             return ERROR;
         }
     }

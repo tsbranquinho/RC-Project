@@ -29,8 +29,6 @@
 #define SPACE -3                    // For error checking
 #define STATUS 6                    // Size of the status
 #define COMMAND 4                   // Size of the command
-#define ERROR -1                    // Error
-#define SUCCESS 0                   // Success
 
 typedef enum {
     CMD_START,
@@ -44,7 +42,8 @@ typedef enum {
     CMD_SET,
     CMD_SLEEP,
     CMD_CLEAN,
-    CMD_HINT
+    CMD_HINT,
+    CMD_HELP
 } Command;
 
 void get_arguments(int argc, char *argv[]);

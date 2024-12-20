@@ -90,7 +90,7 @@ This project implements a **client-server application** with various commands fo
 ---
 
 ### **Tejo Network Details**
-- **IP Address**: `193.136.138.42`  
+- **IP Address**: `193.136.138.142`  
 - **Port Number**: `58011`
 
 ---
@@ -110,8 +110,9 @@ The following commands are implemented in the client:
 | `scoreboard`| View the game scoreboard          | ✅ Completed |
 | **Extras**  |                                   |             |
 | `set`       | Set the player ID (takes `plid`)  | ✅ Completed |
-| `clean`     | Clear game data                   | ✅ Completed |
+| `clean`     | Clear .txt files                  | ✅ Completed |
 | `sleep`     | Pause for a specified time (s)    | ✅ Completed |
+| `help`      | Get the list of commands          | ✅ Completed |
 | `hint`      | Get a hint for the current game   | ✅ Completed |
 
 ---

@@ -4,15 +4,15 @@
 
 int handle_start_request(char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
     char plid[ID_SIZE + 1];
+    memset(plid, 0, sizeof(plid));
     int max_time;
 
-    char extra;
-    if (sscanf(request, "SNG %6s %3d %c", plid, &max_time, &extra) != 2 || max_time <= 0 || max_time > MAX_PLAYTIME) {
+    if (strlen(request) > START_MSG_SIZE || sscanf(request, "SNG %6s %3d", plid, &max_time) != 2 || max_time <= 0 || max_time > MAX_PLAYTIME) {
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
         return ERROR;
     }
 
-    if (!valid_plid(plid)) {
+    if (valid_plid(plid) == ERROR) {
         send_udp_response("RSG ERR\n", client_addr, client_addr_len, udp_socket);
         return ERROR;
     }

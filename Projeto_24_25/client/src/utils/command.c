@@ -14,6 +14,7 @@ Command get_next_command(char *input) {
     if (strncmp(input, "sleep", 5) == 0) return CMD_SLEEP;
     if (strncmp(input, "clean", 5) == 0) return CMD_CLEAN;
     if (strncmp(input, "hint", 4) == 0) return CMD_HINT;
+    if (strncmp(input, "help", 4) == 0) return CMD_HELP;
     return CMD_INVALID;
 }
 
@@ -67,6 +68,9 @@ int handle_command(Command cmd, const char* input) {
             return_value = handle_hint(input);
             break;
 
+        case CMD_HELP:
+            return_value = handle_help(input);
+            break;
         default:
             invalid_command_format(CMD_INVALID);
     }

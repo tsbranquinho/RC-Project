@@ -9,8 +9,8 @@ int handle_trials_request(int tcp_socket, char *request) {
     memset(buffer, 0, sizeof(buffer));
     memset(plid, 0, sizeof(plid));
 
-    int n = read_tcp_socket(tcp_socket, request, 8);
-    if (n < 0) {
+    int n = read_tcp_socket(tcp_socket, request, TRIALS_MSG_SIZE);
+    if (n < 0 || strlen(request) > TRIALS_MSG_SIZE) {
         send_tcp_response("ERR\n", tcp_socket);
         return ERROR;
     }

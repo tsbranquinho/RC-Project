@@ -90,6 +90,7 @@ void receive_show_trials_msg(int fd) {
         }
         fclose(file);
         printf("Trials saved to file %s\n", filename);
+        printf("%s\n", file_data);
     } else {
         printf("ERROR: Invalid response status\n");
         return;

@@ -17,6 +17,7 @@ set settings = {0};
 int main(int argc, char *argv[]) {
 
     signal(SIGINT, sig_detected);
+    signal(SIGPIPE, SIG_IGN); // Ignore SIGPIPE
 
     get_arguments(argc, argv);
     

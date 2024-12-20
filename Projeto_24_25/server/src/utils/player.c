@@ -128,16 +128,16 @@ unsigned int hash_lock(const char *plid) {
 
 int valid_plid(const char *plid) {
     if (strlen(plid) != ID_SIZE) {
-        return 0;
+        return ERROR;
     }
 
     for (int i = 0; i < ID_SIZE; i++) {
         if (plid[i] < '0' || plid[i] > '9') {
-            return 0;
+            return ERROR;
         }
     }
 
-    return 1;
+    return SUCCESS;
 }
 
 void clean_game(Game *game) {

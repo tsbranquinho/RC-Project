@@ -60,6 +60,8 @@ int handle_sleep(const char* input);
 int handle_clean(const char* input);
 //hint.c
 int handle_hint(const char *input);
+//help.c
+int handle_help(const char *input);
 
 
 #endif

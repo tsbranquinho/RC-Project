@@ -11,19 +11,16 @@ int handle_try_request(char *request, struct sockaddr_in *client_addr, socklen_t
     aux_guess[1] = ' ';
     aux_guess[3] = ' ';
     aux_guess[5] = ' ';
-
-    char extra;
-    int n_args = sscanf(request, "TRY %s %c %c %c %c %d %c", plid, &aux_guess[0], &aux_guess[2], &aux_guess[4], &aux_guess[6], &trial_num, &extra);
     aux_guess[7] = '\0';
+    int n_args = sscanf(request, "TRY %s %c %c %c %c %d", plid, &aux_guess[0], &aux_guess[2], &aux_guess[4], &aux_guess[6], &trial_num);
 
 
     if (check_try_err(request, n_args, aux_guess, trial_num) < 0) {
-        printf("Invalid TRY request\n");
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         return ERROR;
     }
 
-    if(!valid_plid(plid)) {
+    if(valid_plid(plid) == ERROR) {
         send_udp_response("RTR ERR\n", client_addr, client_addr_len, udp_socket);
         return ERROR;
     }
@@ -136,27 +133,23 @@ int handle_try_request(char *request, struct sockaddr_in *client_addr, socklen_t
 }
 
 int check_try_err(const char *request, int n_args, char *aux_guess, int trial_num) {
-    if (n_args != 6) {
-        printf("Invalid number of arguments\n");
-        return -1;
+    if (n_args != 6 || strlen(request) > TRY_MSG_SIZE) {
+        return ERROR;
     }
 
     if (trial_num < 0 || trial_num > MAX_TRIALS) {
-        printf("Invalid trial number\n");
-        return -1;
+        return ERROR;
     }
 
-    aux_guess[2*MAX_COLORS-1] = '\0';
-
     if (strlen(aux_guess) != 2*MAX_COLORS-1) {
-        return -1;
+        return ERROR;
     }
     for (int i = 0; i < 2*MAX_COLORS; i += 2) {
         if (strchr(COLOR_OPTIONS, aux_guess[i]) == NULL) {
-            return -1;
+            return ERROR;
         }
         if (aux_guess[i+1] != ' ' && aux_guess[i+1] != '\0') {
-            return -1;
+            return ERROR;
         }
     }
     return 0;
@@ -164,7 +157,7 @@ int check_try_err(const char *request, int n_args, char *aux_guess, int trial_nu
 
 int check_try_nok(const char *plid, Player *player) {
     if (!player) {
-        return -1;
+        return ERROR;
     }
     return 0;
 }
@@ -175,7 +168,7 @@ int check_try_etm(Player *player, char* response) {
         convert_code(temp, player->current_game->secret_key, SECRET_TO_CODE);
         snprintf(response, SMALL_BUFFER, "RTR ETM %s\n", temp);
         player->current_game->end_status = 'T';
-        return -1;
+        return ERROR;
     }
     return 0;
 }
@@ -187,7 +180,7 @@ int check_try_inv(Player *player, int trial_num, char *guess) {
         strcpy(aux->guess, guess);
         if (player->current_game->trial != NULL) {
             if (strcmp(player->current_game->trial->guess, guess) != 0) {
-                return -1;
+                return ERROR;
             }
             else {
                 return 1;
@@ -195,7 +188,7 @@ int check_try_inv(Player *player, int trial_num, char *guess) {
         }
         else {
             free(aux);
-            return -1;
+            return ERROR;
         }
     }
     return 0;
@@ -205,7 +198,7 @@ int check_try_dup(Player *player, char *guess) {
     for (Trials *trial = player->current_game->trial; trial != NULL; trial = trial->prev) {
         if (strcmp(trial->guess, guess) == 0) {
             player->current_game->trial_count--;
-            return -1;
+            return ERROR;
         }
     }
     return 0;
@@ -218,7 +211,7 @@ int check_try_ent(Player *player, char* response, pthread_mutex_t *plid_mutex) {
         snprintf(response, SMALL_BUFFER, "RTR ENT %s\n", temp);
         player->current_game->end_status = 'F';
         end_game(player, plid_mutex);
-        return -1;
+        return ERROR;
     }
     return 0;
 }
@@ -274,7 +267,7 @@ int write_try_to_file(Player *player, char *guess, int black, int white) {
     FILE *fp = fopen(player->current_game->filename, "a");
     if (!fp) {
         perror("Error opening file");
-        return -1;
+        return ERROR;
     }
     char buffer[128];
     memset(buffer, 0, sizeof(buffer));
@@ -283,7 +276,7 @@ int write_try_to_file(Player *player, char *guess, int black, int white) {
     if (fwrite(buffer, 1, strlen(buffer), fp) != strlen(buffer)) {
         perror("Error writing to file");
         fclose(fp);
-        return -1;
+        return ERROR;
     }
     fclose(fp);
     return 0;

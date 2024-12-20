@@ -21,6 +21,8 @@
 #define SMALL_BUFFER 256            // Small buffer size
 #define FILENAME_SIZE 128           // Size of the filename (a little bigger than needed)
 #define FSIZE 1024                  // Size of the file
+#define ERROR -1                    // Error
+#define SUCCESS 0                   // Success
 
 
 int is_number(const char *str);

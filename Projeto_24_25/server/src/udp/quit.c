@@ -5,14 +5,13 @@
 int handle_quit_request(char *request, struct sockaddr_in *client_addr, socklen_t client_addr_len, int udp_socket) {
     char plid[ID_SIZE + 1];
 
-    char extra;
-    if (sscanf(request, "QUT %6s %c", plid, &extra) != 1) {
+    if (strlen(request) > QUIT_MSG_SIZE ||sscanf(request, "QUT %6s", plid) != 1) {
 
         send_udp_response("RQT ERR\n", client_addr, client_addr_len, udp_socket);
         return ERROR;
     }
 
-    if(!valid_plid(plid)) {
+    if(valid_plid(plid) == ERROR) {
         send_udp_response("RQT ERR\n", client_addr, client_addr_len, udp_socket);
         return ERROR;
     }
@@ -20,6 +19,16 @@ int handle_quit_request(char *request, struct sockaddr_in *client_addr, socklen_
     Player *player = find_player(plid);
     if (!player) {
         send_udp_response("RQT NOK\n", client_addr, client_addr_len, udp_socket);
+        set_verbose_quit_message(request, plid);
+        return SUCCESS;
+    }
+    time_t current_time;
+    time(&current_time);
+    if (current_time - player->current_game->start_time > player->current_game->max_time) {
+        send_udp_response("RQT NOK\n", client_addr, client_addr_len, udp_socket);
+        player->current_game->end_status = 'T';
+        player->current_game->last_time = current_time;
+        end_game(player, mutex_plid(plid));
         set_verbose_quit_message(request, plid);
         return SUCCESS;
     }

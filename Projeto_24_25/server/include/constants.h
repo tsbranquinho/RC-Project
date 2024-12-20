@@ -27,8 +27,11 @@
 #define DEBUG 1
 #define PLAY 2
 #define MAX_TASK_QUEUE 512
-#define ERROR -1
-#define SUCCESS 1
+#define START_MSG_SIZE 15
+#define TRY_MSG_SIZE 21
+#define DEBUG_MSG_SIZE 23
+#define TRIALS_MSG_SIZE 8
+#define QUIT_MSG_SIZE 11
 
 typedef struct Trials {
     char guess[MAX_COLORS + 1];
