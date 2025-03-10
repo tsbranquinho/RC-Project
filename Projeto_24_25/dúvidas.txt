@@ -1,5 +1,0 @@
-Server side:
-Qualquer tentativa que ultrapassaria o limite de tentativas ou de tempo, mas que é duplicada ou invalida, deve retornar qual dos erros
-
-Client side:
-Se server responder com INV (trial number atrás do esperado) devemos avançar o número de trials para o Client corresponder 
